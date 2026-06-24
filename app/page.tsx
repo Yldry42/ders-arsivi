@@ -59,6 +59,7 @@ type ArchiveFolderNode = {
 
 type NotSahipleriVerisi = {
   varsayilan?: string[];
+  ogrenciler?: Record<string, { tanitim?: string }>;
   dosyalar?: Record<string, string[]>;
 };
 
@@ -165,17 +166,25 @@ const translate = {
     teaching: 'Ders Anlatımı',
     givenCourses: 'Verdiği Dersler',
     notRated: 'Henüz puanlanmadı',
-    menu: ['Dersler', 'Akademisyenler', 'Hazırlayanlar', 'Hakkımızda'],
+    menu: ['Dersler', 'Öğrenciler', 'Hakkımızda'],
     menuDescriptions: [
       'Arşivdeki derslere, kategorilere ve ders içeriklerine buradan ulaşabilirsiniz.',
-      'Ders arşivinde yer alan akademisyenleri ve ilişkili dersleri inceleyebilirsiniz.',
-      'Bu arşivin hazırlanmasına katkı sağlayan kişileri burada görebilirsiniz.',
+      'Not paylaşan öğrencileri ve arşive katkılarını buradan inceleyebilirsiniz.',
       'Ders Arşivim projesinin amacı ve kapsamı hakkında bilgi edinebilirsiniz.',
     ],
     openedSection: 'Açılan Bölüm',
     openCourse: 'Açılan Ders',
     close: 'Kapat',
     notesTitle: 'Not Sahipleri',
+    noteOwnerDetail: 'Not Sahibi',
+    noteOwnerIntroFallback: 'Bu öğrenci hakkında kısa tanıtım bilgisi henüz eklenmedi.',
+    noteOwnerCourseCount: 'Not paylaştığı ders sayısı',
+    courseListTitle: 'Ders Listesi',
+    courseCodeLabel: 'Ders kodu',
+    courseNumberLabel: 'Ders numarası',
+    selectPlaceholder: 'Seçiniz',
+    openSelectedCourse: 'Dersi Aç',
+    studentListTitle: 'Öğrenci Bilgileri',
     pastQuestionsTitle: 'Çıkmış Soru',
     courseNoteTitle: 'Ders Notu',
     yearLabel: 'Yıl',
@@ -229,17 +238,25 @@ const translate = {
     teaching: 'Teaching',
     givenCourses: 'Courses Taught',
     notRated: 'Not rated yet',
-    menu: ['Courses', 'Instructors', 'Creators', 'About'],
+    menu: ['Courses', 'Students', 'About'],
     menuDescriptions: [
       'Browse archived courses, categories, and course content from this section.',
-      'Explore instructors included in the archive and their related courses.',
-      'See the people who contributed to the preparation of this archive.',
+      'Browse students who shared notes and their archive contributions.',
       'Learn more about the purpose and scope of the Course Archive project.',
     ],
     openedSection: 'Opened Section',
     openCourse: 'Opened Course',
     close: 'Close',
     notesTitle: 'Note Owners',
+    noteOwnerDetail: 'Note Owner',
+    noteOwnerIntroFallback: 'No short introduction has been added for this student yet.',
+    noteOwnerCourseCount: 'Courses with shared notes',
+    courseListTitle: 'Course List',
+    courseCodeLabel: 'Course code',
+    courseNumberLabel: 'Course number',
+    selectPlaceholder: 'Select',
+    openSelectedCourse: 'Open Course',
+    studentListTitle: 'Student Information',
     pastQuestionsTitle: 'Past Question',
     courseNoteTitle: 'Course Note',
     yearLabel: 'Year',
@@ -499,8 +516,12 @@ export default function Home() {
   const [instructorAnimatedText, setInstructorAnimatedText] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [selectedMenuIndex, setSelectedMenuIndex] = useState<number | null>(null);
+  const [selectedMenuCourseCode, setSelectedMenuCourseCode] = useState('');
+  const [selectedMenuCourseNo, setSelectedMenuCourseNo] = useState('');
   const [selectedAcademicName, setSelectedAcademicName] = useState<string | null>(null);
   const [isAcademicModalClosing, setIsAcademicModalClosing] = useState(false);
+  const [selectedNoteOwnerName, setSelectedNoteOwnerName] = useState<string | null>(null);
+  const [isNoteOwnerModalClosing, setIsNoteOwnerModalClosing] = useState(false);
   const [selectedDersId, setSelectedDersId] = useState<number | null>(null);
   const [modalRect, setModalRect] = useState<DOMRect | null>(null);
   const [modalStyle, setModalStyle] = useState<Record<string, string | number> | null>(null);
@@ -531,6 +552,20 @@ export default function Home() {
 
   const openModal = (event: MouseEvent<HTMLElement>, dersId: number) => {
     const rect = event.currentTarget.getBoundingClientRect();
+    setSelectedDersId(dersId);
+    setModalRect(rect);
+    setModalStyle({
+      top: rect.top,
+      left: rect.left,
+      width: rect.width,
+      height: rect.height,
+      opacity: 0,
+    });
+    setIsClosing(false);
+  };
+
+  const openCourseModalFromList = (dersId: number) => {
+    const rect = new DOMRect(window.innerWidth / 2 - 32, window.innerHeight / 2 - 32, 64, 64);
     setSelectedDersId(dersId);
     setModalRect(rect);
     setModalStyle({
@@ -679,6 +714,14 @@ export default function Home() {
     }, 240);
   };
 
+  const closeNoteOwnerModal = () => {
+    setIsNoteOwnerModalClosing(true);
+    window.setTimeout(() => {
+      setSelectedNoteOwnerName(null);
+      setIsNoteOwnerModalClosing(false);
+    }, 240);
+  };
+
   const normalizedInstructorQuery = instructorQuery.trim().toLowerCase();
   const instructorResults = useMemo(() => {
     if (!normalizedInstructorQuery) return [];
@@ -719,6 +762,51 @@ export default function Home() {
 
     return Array.from(courseMap.values()).sort(compareCourseAlphabetically);
   }, [displayedDersler]);
+
+  const menuCourseCards = useMemo(() => {
+    const courseMap = new Map<string, Ders>();
+
+    [...dersList]
+      .sort(compareCourseChronology)
+      .forEach((ders) => {
+        const courseKey = getCourseCodeKey(ders);
+        if (!courseMap.has(courseKey)) {
+          courseMap.set(courseKey, ders);
+        }
+      });
+
+    return Array.from(courseMap.values()).sort(compareCourseAlphabetically);
+  }, [dersList]);
+
+  const menuCourseCodes = useMemo(
+    () => Array.from(new Set(menuCourseCards.map((ders) => ders.kod))).sort((left, right) => left.localeCompare(right, 'tr', { numeric: true })),
+    [menuCourseCards]
+  );
+
+  const menuCourseNumbers = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          menuCourseCards
+            .filter((ders) => !selectedMenuCourseCode || ders.kod === selectedMenuCourseCode)
+            .map((ders) => ders.no)
+        )
+      ).sort((left, right) => left.localeCompare(right, 'tr', { numeric: true })),
+    [menuCourseCards, selectedMenuCourseCode]
+  );
+
+  const selectedMenuCourse = useMemo(
+    () => menuCourseCards.find((ders) => ders.kod === selectedMenuCourseCode && ders.no === selectedMenuCourseNo) ?? null,
+    [menuCourseCards, selectedMenuCourseCode, selectedMenuCourseNo]
+  );
+
+  const noteOwnerNames = useMemo(() => {
+    const names = new Set<string>();
+    noteOwnerData.varsayilan?.forEach((name) => names.add(name));
+    Object.keys(noteOwnerData.ogrenciler ?? {}).forEach((name) => names.add(name));
+    Object.values(noteOwnerData.dosyalar ?? {}).flat().forEach((name) => names.add(name));
+    return Array.from(names).sort((left, right) => left.localeCompare(right, 'tr'));
+  }, [noteOwnerData]);
 
   const groupedDisplayedDersler = useMemo(() => {
     if (selectedCategory !== 'all') return null;
@@ -855,6 +943,27 @@ export default function Home() {
     }, {});
   }, [archiveList, dersList]);
 
+  const selectedNoteOwner = useMemo(() => {
+    if (!selectedNoteOwnerName) return null;
+
+    const courseMap = new Map<string, Ders>();
+    [...dersList]
+      .sort(compareCourseChronology)
+      .forEach((ders) => {
+        const courseKey = getCourseCodeKey(ders);
+        if (!courseMap.has(courseKey)) {
+          courseMap.set(courseKey, ders);
+        }
+      });
+
+    const courseCount = Array.from(courseMap.values()).filter((ders) =>
+      (courseArchiveMap[ders.id] ?? []).some((file) => getArchiveNoteOwners(file).includes(selectedNoteOwnerName))
+    ).length;
+    const intro = noteOwnerData.ogrenciler?.[selectedNoteOwnerName]?.tanitim;
+
+    return { name: selectedNoteOwnerName, intro, courseCount, files: [] as { ders: Ders; file: ArsivDosyasi }[] };
+  }, [courseArchiveMap, dersList, selectedNoteOwnerName]);
+
   const getArchiveFolderSegments = (item: ArsivDosyasi, ders: Ders) => {
     const courseKeys = new Set(getArchiveKeysForCourse(ders));
     const segments = getArchivePath(item).split(/[\\/]/).filter(Boolean);
@@ -946,9 +1055,22 @@ export default function Home() {
                 {archivePath}
               </p>
               {noteOwners.length ? (
-                <p className="mt-1 break-words text-xs font-medium opacity-85" style={{ color: textColor }}>
-                  {locale.fileNoteOwners}: {noteOwners.join(', ')}
-                </p>
+                <div className="mt-1 flex flex-wrap items-center gap-1 text-xs font-medium opacity-85" style={{ color: textColor }}>
+                  <span>{locale.fileNoteOwners}:</span>
+                  {noteOwners.map((owner, index) => (
+                    <button
+                      key={`${archivePath}-${owner}`}
+                      type="button"
+                      onClick={() => {
+                        setSelectedNoteOwnerName(owner);
+                        setIsNoteOwnerModalClosing(false);
+                      }}
+                      className="underline decoration-current/40 underline-offset-2 transition hover:opacity-70"
+                    >
+                      {owner}{index < noteOwners.length - 1 ? ',' : ''}
+                    </button>
+                  ))}
+                </div>
               ) : null}
             </div>
           </div>
@@ -1608,7 +1730,7 @@ export default function Home() {
 
       {selectedAcademic ? (
         <div
-          className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 ${
+          className={`fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/70 p-4 ${
             isAcademicModalClosing ? 'animate-modal-backdrop-out' : 'animate-modal-backdrop'
           }`}
           onClick={closeAcademicModal}
@@ -1698,6 +1820,110 @@ export default function Home() {
         </div>
       ) : null}
 
+      {selectedNoteOwner ? (
+        <div
+          className={`fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/70 p-4 ${
+            isNoteOwnerModalClosing ? 'animate-modal-backdrop-out' : 'animate-modal-backdrop'
+          }`}
+          onClick={closeNoteOwnerModal}
+        >
+          <section
+            className={`max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-slate-200 bg-white/90 shadow-2xl backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/90 ${
+              isNoteOwnerModalClosing ? 'animate-section-modal-out' : 'animate-section-modal'
+            }`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-5 border-b border-slate-200 p-6 dark:border-slate-700">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                  {locale.noteOwnerDetail}
+                </p>
+                <h2 className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">
+                  {selectedNoteOwner.name}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={closeNoteOwnerModal}
+                className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+              >
+                {locale.close}
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem]">
+                <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-950">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{locale.noteOwnerDetail}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                    {selectedNoteOwner.intro ?? locale.noteOwnerIntroFallback}
+                  </p>
+                </div>
+
+                <div className="rounded-3xl border border-slate-200 bg-slate-900 p-5 text-white shadow-sm dark:border-slate-700 dark:bg-slate-100 dark:text-slate-900">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] opacity-70">
+                    {locale.noteOwnerCourseCount}
+                  </p>
+                  <p className="mt-4 text-5xl font-black tabular-nums">
+                    {selectedNoteOwner.courseCount}
+                  </p>
+                </div>
+              </div>
+              <div className="hidden">
+                {selectedNoteOwner.files.map(({ ders, file }) => {
+                  const extension = getFileExtension(file.dosya_adi);
+                  const previewUrl = getArchivePreviewUrl(file);
+                  const downloadUrl = getArchiveDownloadUrl(file);
+                  const archivePath = getArchivePath(file);
+                  const accentColor = ders.renk_kodu ?? '#64748b';
+
+                  return (
+                    <article
+                      key={`${getCourseCodeKey(ders)}-${archivePath}`}
+                      className="rounded-2xl border p-4"
+                      style={{
+                        borderColor: `${accentColor}70`,
+                        backgroundColor: getCardBackground(accentColor),
+                      }}
+                    >
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                            {ders.kod} {getDisplayNo(ders)} — {language === 'en' && ders.ders_adi_en ? ders.ders_adi_en : ders.ders_adi}
+                          </p>
+                          <p className="mt-2 break-words text-sm text-slate-700 dark:text-slate-300">
+                            {file.dosya_adi}
+                          </p>
+                          <p className="mt-1 break-words text-xs text-slate-500 dark:text-slate-400">
+                            {archivePath}{file.boyut ? ` · ${file.boyut}` : ''}
+                          </p>
+                        </div>
+
+                        <div className="flex shrink-0 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setArchivePreview({ ad: file.dosya_adi, url: getArchiveFileUrl(file), previewUrl, downloadUrl, uzanti: extension })}
+                            className="rounded-full bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700"
+                          >
+                            {locale.preview}
+                          </button>
+                          <a
+                            href={downloadUrl}
+                            className="rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-900 transition hover:bg-white/60 dark:border-slate-700 dark:text-white"
+                          >
+                            {locale.download}
+                          </a>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
       {selectedMenuIndex !== null ? (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-6 animate-modal-backdrop"
@@ -1721,10 +1947,94 @@ export default function Home() {
                 {locale.close}
               </button>
             </div>
-            <div className="min-h-64 p-6">
-              <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-slate-300">
-                {locale.menuDescriptions[selectedMenuIndex]}
-              </p>
+            <div className="max-h-[70vh] overflow-y-auto p-6">
+              {selectedMenuIndex === 0 ? (
+                <div>
+                  <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-slate-300">
+                    {locale.menuDescriptions[selectedMenuIndex]}
+                  </p>
+                  <h3 className="mt-6 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                    {locale.courseListTitle}
+                  </h3>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <label className="block">
+                      <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                        {locale.courseCodeLabel}
+                      </span>
+                      <select
+                        value={selectedMenuCourseCode}
+                        onChange={(event) => {
+                          setSelectedMenuCourseCode(event.target.value);
+                          setSelectedMenuCourseNo('');
+                        }}
+                        className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:ring-2 focus:ring-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                      >
+                        <option value="">{locale.selectPlaceholder}</option>
+                        {menuCourseCodes.map((code) => (
+                          <option key={code} value={code}>
+                            {code}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="block">
+                      <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                        {locale.courseNumberLabel}
+                      </span>
+                      <select
+                        value={selectedMenuCourseNo}
+                        onChange={(event) => setSelectedMenuCourseNo(event.target.value)}
+                        className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:ring-2 focus:ring-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                      >
+                        <option value="">{locale.selectPlaceholder}</option>
+                        {menuCourseNumbers.map((no) => (
+                          <option key={no} value={no}>
+                            {no}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={!selectedMenuCourse}
+                    onClick={() => selectedMenuCourse && openCourseModalFromList(selectedMenuCourse.id)}
+                    className="mt-5 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+                  >
+                    {locale.openSelectedCourse}
+                  </button>
+                </div>
+              ) : selectedMenuIndex === 1 ? (
+                <div>
+                  <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-slate-300">
+                    {locale.menuDescriptions[selectedMenuIndex]}
+                  </p>
+                  <h3 className="mt-6 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                    {locale.studentListTitle}
+                  </h3>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {noteOwnerNames.map((owner) => (
+                      <button
+                        key={owner}
+                        type="button"
+                        onClick={() => {
+                          setSelectedNoteOwnerName(owner);
+                          setIsNoteOwnerModalClosing(false);
+                        }}
+                        className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                      >
+                        {owner}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-slate-300">
+                  {locale.menuDescriptions[selectedMenuIndex]}
+                </p>
+              )}
             </div>
           </section>
         </div>
@@ -1797,9 +2107,27 @@ export default function Home() {
                 >
                   <div className="space-y-2">
                     <h3 className="text-sm font-semibold uppercase tracking-[0.15em]" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>{locale.notesTitle}</h3>
-                    <p className="text-sm" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>
-                      {courseNoteOwners.length ? courseNoteOwners.join(', ') : locale.noNotesInfo}
-                    </p>
+                    {courseNoteOwners.length ? (
+                      <div className="flex flex-wrap gap-2 text-sm" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>
+                        {courseNoteOwners.map((owner) => (
+                          <button
+                            key={owner}
+                            type="button"
+                            onClick={() => {
+                              setSelectedNoteOwnerName(owner);
+                              setIsNoteOwnerModalClosing(false);
+                            }}
+                            className="rounded-full border border-white/40 bg-white/15 px-3 py-1 font-medium transition hover:bg-white/25"
+                          >
+                            {owner}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>
+                        {locale.noNotesInfo}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <h3 className="text-sm font-semibold uppercase tracking-[0.15em]" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>{locale.pastQuestionsTitle}</h3>
@@ -1831,9 +2159,18 @@ export default function Home() {
                           </p>
                           <div className="mt-2 space-y-1">
                             {normalizeInstructors(offering.ogretim_uyesi).map((instructor) => (
-                              <p key={`${offering.id}-${instructor}`} className="font-medium" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>
+                              <button
+                                key={`${offering.id}-${instructor}`}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedAcademicName(instructor);
+                                  setIsAcademicModalClosing(false);
+                                }}
+                                className="block text-left font-medium underline decoration-current/35 underline-offset-4 transition hover:opacity-70"
+                                style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}
+                              >
                                 {instructor}
-                              </p>
+                              </button>
                             ))}
                           </div>
                         </div>
@@ -1850,7 +2187,7 @@ export default function Home() {
 
       {archivePreview ? (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/75 p-4 animate-modal-backdrop"
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/75 p-4 animate-modal-backdrop"
           onClick={() => setArchivePreview(null)}
         >
           <section

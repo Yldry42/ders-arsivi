@@ -2,5 +2,10 @@
   "varsayilan": [
     "Yıldıray Çankaya"
   ],
+  "ogrenciler": {
+    "Yıldıray Çankaya": {
+      "tanitim": "İTÜ Uzay Mühendisliği ders arşivine kişisel ders notları ve çalışma materyalleriyle katkı sağlayan öğrenci."
+    }
+  },
   "dosyalar": {}
 }
