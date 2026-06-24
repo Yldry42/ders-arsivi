@@ -214,8 +214,7 @@ const translate = {
     selectPlaceholder: 'Seçiniz',
     openSelectedCourse: 'Dersi Aç',
     studentListTitle: 'Emeği Geçenler',
-    pastQuestionsTitle: 'Çıkmış Soru',
-    courseNoteTitle: 'Ders Notu',
+    aboutCourseTitle: 'Ders Hakkında',
     yearLabel: 'Yıl',
     termLabel: 'Dönem',
     clear: 'Temizle',
@@ -228,7 +227,7 @@ const translate = {
     noInfo: 'Bilgi yok',
     noNotesInfo: 'Bu ders için not sahipleri bilgisi henüz bulunmuyor.',
     noPastQuestionInfo: 'Çıkmış soru bilgisi eklenmedi.',
-    noCourseNoteInfo: 'Ders hakkında kısa değerlendirme bilgisi yok.',
+    noCourseNoteInfo: 'Ders hakkında kısa bilgi henüz eklenmedi.',
     archiveTitle: 'Ders Arşivi',
     archiveDescription: 'Yıl seçerek bu derse ait klasör ve dosyaları inceleyebilirsiniz.',
     archiveNoFiles: 'Bu ders için arşiv dosyası bulunamadı.',
@@ -289,8 +288,7 @@ const translate = {
     selectPlaceholder: 'Select',
     openSelectedCourse: 'Open Course',
     studentListTitle: 'Contributors',
-    pastQuestionsTitle: 'Past Question',
-    courseNoteTitle: 'Course Note',
+    aboutCourseTitle: 'About the Course',
     yearLabel: 'Year',
     termLabel: 'Term',
     clear: 'Clear',
@@ -303,7 +301,7 @@ const translate = {
     noInfo: 'No info available',
     noNotesInfo: 'No note owner information available.',
     noPastQuestionInfo: 'No past question information provided.',
-    noCourseNoteInfo: 'No course note available.',
+    noCourseNoteInfo: 'No short course information has been added yet.',
     archiveTitle: 'Course Archive',
     archiveDescription: 'Select a year to browse folders and files for this course.',
     archiveNoFiles: 'No archive files found for this course.',
@@ -1108,13 +1106,20 @@ export default function Home() {
         ...courseInstructorOptions,
       ])
     );
+    const selectedInstructorOfferings =
+      selectedArchiveInstructor === null
+        ? courseOfferings
+        : courseOfferings.filter((offering) => normalizeInstructors(offering.ogretim_uyesi).includes(selectedArchiveInstructor));
+    const selectedInstructorYearStarts = new Set(selectedInstructorOfferings.map((offering) => getCourseYearStart(offering.yil)));
+    const selectedInstructorTerms = new Set(selectedInstructorOfferings.map((offering) => getArchiveTerm(offering.donem, language)));
     const instructorFilteredItems =
       selectedArchiveInstructor === null
         ? archiveItems
         : archiveItems.filter((item) => {
             const archiveInstructor = getArchiveInstructor(item);
             if (archiveInstructor) return archiveInstructor === selectedArchiveInstructor;
-            return courseInstructorOptions.includes(selectedArchiveInstructor);
+            const itemTerm = getArchiveTerm(getArchivePath(item), language);
+            return selectedInstructorYearStarts.has(getCourseYearStart(item.yil)) && selectedInstructorTerms.has(itemTerm);
           });
     const years = Array.from(new Set(instructorFilteredItems.map((item) => item.yil))).sort((left, right) => getCourseYearStart(left) - getCourseYearStart(right));
     const activeYear = selectedArchiveYear && years.includes(selectedArchiveYear) ? selectedArchiveYear : years[0] ?? null;
@@ -2234,12 +2239,10 @@ export default function Home() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-sm font-semibold uppercase tracking-[0.15em]" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>{locale.pastQuestionsTitle}</h3>
-                    <p className="text-sm" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>{ders.cikmis_soru ?? locale.noPastQuestionInfo}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-semibold uppercase tracking-[0.15em]" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>{locale.courseNoteTitle}</h3>
-                    <p className="mt-2 text-sm leading-7" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>{ders.degerlendirme ?? locale.noCourseNoteInfo}</p>
+                    <h3 className="text-sm font-semibold uppercase tracking-[0.15em]" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>{locale.aboutCourseTitle}</h3>
+                    <p className="mt-2 text-sm leading-7" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>
+                      {ders.degerlendirme ?? ders.cikmis_soru ?? locale.noCourseNoteInfo}
+                    </p>
                   </div>
                   {courseGradeDistributions.length ? (
                     <div className="space-y-3 border-t pt-6" style={{ borderColor: `${accentColor}80` }}>
