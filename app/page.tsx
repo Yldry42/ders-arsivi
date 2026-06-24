@@ -146,6 +146,13 @@ const MoonIcon = () => (
   </svg>
 );
 
+const DownloadIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 3v11m0 0 4-4m-4 4-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
 const FloatingCloseButton = ({ label, onClick }: { label: string; onClick: () => void }) => (
   <button
     type="button"
@@ -545,7 +552,9 @@ export default function Home() {
   const [animatedText, setAnimatedText] = useState('');
   const [instructorAnimatedText, setInstructorAnimatedText] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isMenuDropdownClosing, setIsMenuDropdownClosing] = useState(false);
   const [selectedMenuIndex, setSelectedMenuIndex] = useState<number | null>(null);
+  const [isMenuModalClosing, setIsMenuModalClosing] = useState(false);
   const [selectedMenuCourseCode, setSelectedMenuCourseCode] = useState('');
   const [selectedMenuCourseNo, setSelectedMenuCourseNo] = useState('');
   const [selectedAcademicName, setSelectedAcademicName] = useState<string | null>(null);
@@ -562,6 +571,7 @@ export default function Home() {
   const [openArchiveFolders, setOpenArchiveFolders] = useState<Record<string, boolean>>({});
   const [archivePreview, setArchivePreview] = useState<ArsivOnizleme | null>(null);
   const [archivePreviewZoom, setArchivePreviewZoom] = useState(100);
+  const [isArchivePreviewClosing, setIsArchivePreviewClosing] = useState(false);
   const [isHeaderPinned, setIsHeaderPinned] = useState(false);
   const headerSentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -663,7 +673,38 @@ export default function Home() {
 
   useEffect(() => {
     setArchivePreviewZoom(100);
+    setIsArchivePreviewClosing(false);
   }, [archivePreview]);
+
+  const closeMenuModal = () => {
+    setIsMenuModalClosing(true);
+    window.setTimeout(() => {
+      setSelectedMenuIndex(null);
+      setIsMenuModalClosing(false);
+    }, 240);
+  };
+
+  const closeArchivePreview = () => {
+    setIsArchivePreviewClosing(true);
+    window.setTimeout(() => {
+      setArchivePreview(null);
+      setIsArchivePreviewClosing(false);
+    }, 240);
+  };
+
+  const toggleMenuDropdown = () => {
+    if (!menuOpen) {
+      setIsMenuDropdownClosing(false);
+      setMenuOpen(true);
+      return;
+    }
+
+    setIsMenuDropdownClosing(true);
+    window.setTimeout(() => {
+      setMenuOpen(false);
+      setIsMenuDropdownClosing(false);
+    }, 180);
+  };
 
   const categoryColors = useMemo(
     () =>
@@ -1584,7 +1625,7 @@ export default function Home() {
               <div className="relative">
                 <button
                   type="button"
-                  onClick={() => setMenuOpen((open) => !open)}
+                  onClick={toggleMenuDropdown}
                   className="relative h-10 w-10 rounded-full border border-slate-200 bg-white p-2 text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 sm:h-12 sm:w-12"
                   aria-label={menuOpen ? locale.menuClose : locale.menuOpen}
                 >
@@ -1594,14 +1635,20 @@ export default function Home() {
                 </button>
 
                 {menuOpen ? (
-                  <div className="absolute right-0 top-14 z-40 w-64 rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-2xl">
+                  <div
+                    className={`absolute right-0 top-14 z-40 w-64 rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-700 dark:bg-slate-900 ${
+                      isMenuDropdownClosing ? 'animate-section-modal-out' : 'animate-section-modal'
+                    }`}
+                  >
                     <nav className="space-y-3">
                       {locale.menu.map((item, index) => (
                         <button
                           key={item}
                           type="button"
                           onClick={() => {
+                            setIsMenuModalClosing(false);
                             setSelectedMenuIndex(index);
+                            setIsMenuDropdownClosing(false);
                             setMenuOpen(false);
                           }}
                           className="block w-full rounded-2xl px-4 py-3 text-left text-sm font-semibold text-slate-800 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
@@ -2043,15 +2090,19 @@ export default function Home() {
 
       {selectedMenuIndex !== null ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-6 animate-modal-backdrop"
-          onClick={() => setSelectedMenuIndex(null)}
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-6 ${
+            isMenuModalClosing ? 'animate-modal-backdrop-out' : 'animate-modal-backdrop'
+          }`}
+          onClick={closeMenuModal}
         >
           <section
-            className="w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-2xl backdrop-blur-xl animate-section-modal dark:border-slate-700 dark:bg-slate-900/90"
+            className={`w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-2xl backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/90 ${
+              isMenuModalClosing ? 'animate-section-modal-out' : 'animate-section-modal'
+            }`}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="relative border-b border-slate-200 p-6 dark:border-slate-700">
-              <FloatingCloseButton label={locale.close} onClick={() => setSelectedMenuIndex(null)} />
+              <FloatingCloseButton label={locale.close} onClick={closeMenuModal} />
               <div className="pr-14">
                 <h2 className="text-3xl font-semibold text-slate-900 dark:text-white">
                   {locale.menu[selectedMenuIndex]}
@@ -2300,15 +2351,19 @@ export default function Home() {
 
       {archivePreview ? (
         <div
-          className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/75 p-2 animate-modal-backdrop sm:p-3"
-          onClick={() => setArchivePreview(null)}
+          className={`fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/75 p-2 sm:p-3 ${
+            isArchivePreviewClosing ? 'animate-modal-backdrop-out' : 'animate-modal-backdrop'
+          }`}
+          onClick={closeArchivePreview}
         >
           <section
-            className="flex max-h-[94vh] w-full max-w-[min(96vw,86rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-2xl backdrop-blur-xl animate-section-modal dark:border-slate-700 dark:bg-slate-900/95"
+            className={`flex max-h-[94vh] w-full max-w-[min(96vw,86rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-2xl backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/95 ${
+              isArchivePreviewClosing ? 'animate-section-modal-out' : 'animate-section-modal'
+            }`}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="relative border-b border-slate-200 p-3 dark:border-slate-700 sm:px-4">
-              <FloatingCloseButton label={locale.close} onClick={() => setArchivePreview(null)} />
+              <FloatingCloseButton label={locale.close} onClick={closeArchivePreview} />
               <div className="flex flex-col gap-3 pr-14 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <h2 className="break-words text-base font-semibold text-slate-900 dark:text-white sm:text-lg">
@@ -2320,23 +2375,23 @@ export default function Home() {
               </div>
               <div className="flex shrink-0 flex-wrap items-center gap-2">
                 {['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(archivePreview.uzanti) ? (
-                  <div className="flex items-center rounded-full border border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-950">
+                  <div className="flex h-11 items-center rounded-full border border-slate-200 bg-slate-50/90 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-950/90">
                     <button
                       type="button"
                       onClick={() => setArchivePreviewZoom((zoom) => Math.max(50, zoom - 10))}
-                      className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-slate-700 transition hover:bg-white disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
+                      className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-semibold text-slate-700 transition hover:bg-white hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
                       disabled={archivePreviewZoom <= 50}
                       aria-label="Uzaklaştır"
                     >
                       −
                     </button>
-                    <span className="min-w-12 text-center text-xs font-semibold tabular-nums text-slate-600 dark:text-slate-300">
+                    <span className="min-w-14 text-center text-xs font-bold tabular-nums text-slate-600 dark:text-slate-300">
                       {archivePreviewZoom}%
                     </span>
                     <button
                       type="button"
                       onClick={() => setArchivePreviewZoom((zoom) => Math.min(180, zoom + 10))}
-                      className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-slate-700 transition hover:bg-white disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
+                      className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-semibold text-slate-700 transition hover:bg-white hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
                       disabled={archivePreviewZoom >= 180}
                       aria-label="Yakınlaştır"
                     >
@@ -2346,8 +2401,9 @@ export default function Home() {
                 ) : null}
                 <a
                   href={archivePreview.downloadUrl}
-                  className="rounded-full border border-slate-300 px-3.5 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-900 transition hover:bg-slate-100 dark:border-slate-700 dark:text-white dark:hover:bg-slate-800"
+                  className="flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-slate-900 px-4 text-xs font-bold uppercase tracking-[0.12em] text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-700 hover:shadow-md dark:border-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
                 >
+                  <DownloadIcon />
                   {locale.download}
                 </a>
               </div>
@@ -2378,8 +2434,9 @@ export default function Home() {
                   </p>
                   <a
                     href={archivePreview.downloadUrl}
-                    className="mt-5 rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+                    className="mt-5 flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
                   >
+                    <DownloadIcon />
                     {locale.download}
                   </a>
                 </div>
