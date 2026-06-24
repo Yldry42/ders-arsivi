@@ -5,7 +5,24 @@
   "ogrenciler": {
     "Yıldıray Çankaya": {
       "tanitim": "İTÜ Uzay Mühendisliği ders arşivine kişisel ders notları ve çalışma materyalleriyle katkı sağlayan öğrenci."
+    },
+    "Halil İbrahim Çelik": {
+      "tanitim": "İTÜ Uzay Mühendisliği ders arşivine UZB220E ve UZB451E dersleri için not ve kaynak katkısı sağlayan öğrenci."
+    },
+    "Ömer Tarık Karaca": {
+      "tanitim": "İTÜ Uzay Mühendisliği ders arşivine UUM535E dersi için not ve kaynak katkısı sağlayan öğrenci."
     }
+  },
+  "dersler": {
+    "UZB220E": [
+      "Halil İbrahim Çelik"
+    ],
+    "UZB451E": [
+      "Halil İbrahim Çelik"
+    ],
+    "UUM535E": [
+      "Ömer Tarık Karaca"
+    ]
   },
   "dosyalar": {}
 }

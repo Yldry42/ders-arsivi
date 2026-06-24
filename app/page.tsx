@@ -72,6 +72,7 @@ type NotDagilimlariVerisi = {
 type NotSahipleriVerisi = {
   varsayilan?: string[];
   ogrenciler?: Record<string, { tanitim?: string }>;
+  dersler?: Record<string, string[]>;
   dosyalar?: Record<string, string[]>;
 };
 
@@ -143,6 +144,18 @@ const MoonIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
+);
+
+const FloatingCloseButton = ({ label, onClick }: { label: string; onClick: () => void }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-label={label}
+    title={label}
+    className="fixed right-5 top-5 z-[90] flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-900 text-2xl font-light leading-none text-white shadow-lg ring-1 ring-white/20 transition hover:-translate-y-0.5 hover:bg-slate-700 hover:shadow-xl dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+  >
+    ×
+  </button>
 );
 
 const lightenHex = (hex: string, mix = 0.85) => {
@@ -225,7 +238,6 @@ const translate = {
     archiveAll: 'Tümü',
     archiveGeneral: 'Genel',
     archiveNoFilteredFiles: 'Bu seçim için dosya bulunamadı.',
-    fileNoteOwners: 'Not sahibi',
     preview: 'Ön İzle',
     download: 'İndir',
     previewUnavailable: 'Bu dosya türü tarayıcı içinde ön izlenemeyebilir. İndirerek açabilirsiniz.',
@@ -301,7 +313,6 @@ const translate = {
     archiveAll: 'All',
     archiveGeneral: 'General',
     archiveNoFilteredFiles: 'No files found for this selection.',
-    fileNoteOwners: 'Note owner',
     preview: 'Preview',
     download: 'Download',
     previewUnavailable: 'This file type may not be previewable in the browser. You can download it instead.',
@@ -830,6 +841,7 @@ export default function Home() {
     const names = new Set<string>();
     noteOwnerData.varsayilan?.forEach((name) => names.add(name));
     Object.keys(noteOwnerData.ogrenciler ?? {}).forEach((name) => names.add(name));
+    Object.values(noteOwnerData.dersler ?? {}).flat().forEach((name) => names.add(name));
     Object.values(noteOwnerData.dosyalar ?? {}).flat().forEach((name) => names.add(name));
     return Array.from(names).sort((left, right) => left.localeCompare(right, 'tr'));
   }, [noteOwnerData]);
@@ -926,15 +938,23 @@ export default function Home() {
       )
     );
 
-  const getArchiveNoteOwners = (file: ArsivDosyasi) => {
-    const archivePath = getArchivePath(file);
-    const fileOwners = noteOwnerData.dosyalar?.[archivePath] ?? noteOwnerData.dosyalar?.[file.dosya_adi];
-    return fileOwners?.length ? fileOwners : noteOwnerData.varsayilan ?? [];
+  const getManualCourseNoteOwners = (ders: Ders) => {
+    const courseKeys = new Set(getArchiveKeysForCourse(ders));
+
+    return Array.from(
+      new Set(
+        Object.entries(noteOwnerData.dersler ?? {}).flatMap(([courseKey, owners]) =>
+          courseKeys.has(normalizeArchiveToken(courseKey)) ? owners : []
+        )
+      )
+    );
   };
 
-  const getCourseNoteOwners = (archiveItems: ArsivDosyasi[], ders: Ders) => {
-    const owners = Array.from(new Set(archiveItems.flatMap((item) => getArchiveNoteOwners(item)).filter(Boolean)));
-    return owners.length ? owners : ders.not_sahipleri ?? [];
+  const getCourseNoteOwners = (_archiveItems: ArsivDosyasi[], ders: Ders) => {
+    const manualOwners = getManualCourseNoteOwners(ders);
+    if (manualOwners.length) return Array.from(new Set([...(noteOwnerData.varsayilan ?? []), ...manualOwners]));
+    if (ders.not_sahipleri?.length) return ders.not_sahipleri;
+    return noteOwnerData.varsayilan ?? [];
   };
 
   const compareArchiveFiles = (left: ArsivDosyasi, right: ArsivDosyasi) =>
@@ -983,13 +1003,11 @@ export default function Home() {
         }
       });
 
-    const courseCount = Array.from(courseMap.values()).filter((ders) =>
-      (courseArchiveMap[ders.id] ?? []).some((file) => getArchiveNoteOwners(file).includes(selectedNoteOwnerName))
-    ).length;
+    const courseCount = Array.from(courseMap.values()).filter((ders) => getCourseNoteOwners([], ders).includes(selectedNoteOwnerName)).length;
     const intro = noteOwnerData.ogrenciler?.[selectedNoteOwnerName]?.tanitim;
 
     return { name: selectedNoteOwnerName, intro, courseCount, files: [] as { ders: Ders; file: ArsivDosyasi }[] };
-  }, [courseArchiveMap, dersList, selectedNoteOwnerName]);
+  }, [dersList, selectedNoteOwnerName]);
 
   const getContributorInitials = (name: string) =>
     name
@@ -1131,37 +1149,18 @@ export default function Home() {
       const previewUrl = getArchivePreviewUrl(file);
       const downloadUrl = getArchiveDownloadUrl(file);
       const archivePath = getArchivePath(file);
-      const noteOwners = getArchiveNoteOwners(file);
 
       return (
         <div
           key={archivePath}
-          className="flex flex-col gap-3 rounded-2xl border border-white/30 bg-white/20 p-3 sm:flex-row sm:items-center sm:justify-between"
+          className="flex min-h-[4.75rem] flex-col gap-3 rounded-2xl border border-white/30 bg-white/20 p-3 sm:flex-row sm:items-center sm:justify-between"
         >
-          <div className="flex min-w-0 items-start gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             {getArchiveFileIcon(extension)}
-            <div className="min-w-0">
-              <p className="break-words text-sm font-medium" style={{ color: textColor }}>
+            <div className="flex min-h-9 min-w-0 items-center">
+              <p className="break-words text-sm font-medium leading-tight" style={{ color: textColor }}>
                 {file.dosya_adi}
               </p>
-              {noteOwners.length ? (
-                <div className="mt-1 flex flex-wrap items-center gap-1 text-xs font-medium opacity-85" style={{ color: textColor }}>
-                  <span>{locale.fileNoteOwners}:</span>
-                  {noteOwners.map((owner, index) => (
-                    <button
-                      key={`${archivePath}-${owner}`}
-                      type="button"
-                      onClick={() => {
-                        setSelectedNoteOwnerName(owner);
-                        setIsNoteOwnerModalClosing(false);
-                      }}
-                      className="underline decoration-current/40 underline-offset-2 transition hover:opacity-70"
-                    >
-                      {owner}{index < noteOwners.length - 1 ? ',' : ''}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
             </div>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end sm:pl-3">
@@ -1836,8 +1835,9 @@ export default function Home() {
             }`}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-5 border-b border-slate-200 p-6 dark:border-slate-700">
-              <div>
+            <div className="relative border-b border-slate-200 p-6 dark:border-slate-700">
+              <FloatingCloseButton label={locale.close} onClick={closeAcademicModal} />
+              <div className="pr-14">
                 <h2 className="text-3xl font-semibold text-slate-900 dark:text-white">
                   {selectedAcademic.ad}
                 </h2>
@@ -1845,13 +1845,6 @@ export default function Home() {
                   {locale.facultyLabel}: {selectedAcademic.fakulte ?? locale.defaultFaculty}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={closeAcademicModal}
-                className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
-              >
-                {locale.close}
-              </button>
             </div>
 
             <div className="p-6">
@@ -1953,8 +1946,9 @@ export default function Home() {
             }`}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-5 border-b border-slate-200 p-6 dark:border-slate-700">
-              <div>
+            <div className="relative border-b border-slate-200 p-6 dark:border-slate-700">
+              <FloatingCloseButton label={locale.close} onClick={closeNoteOwnerModal} />
+              <div className="pr-14">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                   {locale.noteOwnerDetail}
                 </p>
@@ -1967,13 +1961,6 @@ export default function Home() {
                   </h2>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={closeNoteOwnerModal}
-                className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
-              >
-                {locale.close}
-              </button>
             </div>
 
             <div className="p-6">
@@ -2058,19 +2045,13 @@ export default function Home() {
             className="w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-2xl backdrop-blur-xl animate-section-modal dark:border-slate-700 dark:bg-slate-900/90"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-5 border-b border-slate-200 p-6 dark:border-slate-700">
-              <div>
+            <div className="relative border-b border-slate-200 p-6 dark:border-slate-700">
+              <FloatingCloseButton label={locale.close} onClick={() => setSelectedMenuIndex(null)} />
+              <div className="pr-14">
                 <h2 className="text-3xl font-semibold text-slate-900 dark:text-white">
                   {locale.menu[selectedMenuIndex]}
                 </h2>
               </div>
-              <button
-                type="button"
-                onClick={() => setSelectedMenuIndex(null)}
-                className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
-              >
-                {locale.close}
-              </button>
             </div>
             <div className="max-h-[70vh] overflow-y-auto p-6">
               {selectedMenuIndex === 0 ? (
@@ -2212,19 +2193,13 @@ export default function Home() {
                 <div
                   className="course-modal-scrollbar h-full overflow-y-auto"
                 >
-                <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
+                <div className="relative p-6">
+                  <FloatingCloseButton label={locale.close} onClick={() => closeModal()} />
+                  <div className="pr-14">
                     <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
                       {ders.kod} {getDisplayNo(ders)} — {language === 'en' && ders.ders_adi_en ? ders.ders_adi_en : ders.ders_adi}
                     </h2>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => closeModal()}
-                    className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-slate-700"
-                  >
-                    {locale.close}
-                  </button>
                 </div>
 
                 <div
@@ -2329,7 +2304,9 @@ export default function Home() {
             className="flex max-h-[94vh] w-full max-w-[min(96vw,86rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-2xl backdrop-blur-xl animate-section-modal dark:border-slate-700 dark:bg-slate-900/95"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex flex-col gap-3 border-b border-slate-200 p-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+            <div className="relative border-b border-slate-200 p-3 dark:border-slate-700 sm:px-4">
+              <FloatingCloseButton label={locale.close} onClick={() => setArchivePreview(null)} />
+              <div className="flex flex-col gap-3 pr-14 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <h2 className="break-words text-base font-semibold text-slate-900 dark:text-white sm:text-lg">
                   {archivePreview.ad}
@@ -2370,13 +2347,7 @@ export default function Home() {
                 >
                   {locale.download}
                 </a>
-                <button
-                  type="button"
-                  onClick={() => setArchivePreview(null)}
-                  className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
-                >
-                  {locale.close}
-                </button>
+              </div>
               </div>
             </div>
 
