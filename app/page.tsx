@@ -201,7 +201,7 @@ const translate = {
     footerContactText: 'İletişim bilgileri eklenecek.',
     footerCreatorsTitle: 'Hazırlayanlar',
     footerCreatorsText: 'Hazırlayanların ad soyad bilgileri eklenecek.',
-    footerMadeWith: 'Uzay mühendisliği öğrencileri tarafından kalp ile yapılmıştır.',
+    footerMadeWith: 'Uzay mühendisliği öğrencileri tarafından ❤️ ile yapılmıştır.',
   },
   en: {
     title: 'ITU - Astronautical Engineering Archive',
@@ -264,7 +264,7 @@ const translate = {
     footerContactText: 'Contact information will be added.',
     footerCreatorsTitle: 'Creators',
     footerCreatorsText: 'Creator names will be added.',
-    footerMadeWith: 'Made with heart by Astronautical Engineering students.',
+    footerMadeWith: 'Made with ❤️ by Astronautical Engineering students.',
   },
 } as const;
 
@@ -1541,7 +1541,7 @@ export default function Home() {
         </div>
 
       <footer className="mt-14 rounded-3xl border border-slate-200/80 bg-white/80 p-6 shadow-sm backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-950/80 sm:p-8">
-        <div className="grid gap-6 md:grid-cols-[1fr_1fr_auto] md:items-start">
+        <div className="grid gap-6 md:grid-cols-2 md:items-start">
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
               {locale.footerContactTitle}
@@ -1559,15 +1559,12 @@ export default function Home() {
               {locale.footerCreatorsText}
             </p>
           </div>
+        </div>
 
-          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-900 md:justify-self-end">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-100 text-lg text-rose-500 dark:bg-rose-950/60">
-              ♥
-            </span>
-            <p className="max-w-xs text-sm font-medium leading-6 text-slate-700 dark:text-slate-300">
-              {locale.footerMadeWith}
-            </p>
-          </div>
+        <div className="mt-7 border-t border-slate-200 pt-5 text-center dark:border-slate-700">
+          <p className="text-sm font-medium leading-6 text-slate-700 dark:text-slate-300 sm:text-base">
+            {locale.footerMadeWith}
+          </p>
         </div>
       </footer>
 
