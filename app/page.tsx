@@ -142,7 +142,8 @@ const lightenHex = (hex: string, mix = 0.85) => {
 const translate = {
   tr: {
     title: 'İTÜ - Uzay Mühendisliği Ders Arşivi',
-    description: 'Uzay mühendsiliği bölümü öğrencileri tarafından hazırlanmış ders arşivi.',
+    description: 'Uzay mühendisliği bölümü öğrencileri tarafından hazırlanmış ders arşivi.',
+    brandEyebrow: 'Ders Arşivim',
     searchPlaceholder: 'Ders kodu, isim veya akademisyen ara...',
     searchNote: 'Arama yalnızca seçili sekmede yapılıyor.',
     instructorPanelTitle: 'Akademisyenler',
@@ -196,10 +197,16 @@ const translate = {
     preview: 'Ön İzle',
     download: 'İndir',
     previewUnavailable: 'Bu dosya türü tarayıcı içinde ön izlenemeyebilir. İndirerek açabilirsiniz.',
+    footerContactTitle: 'İletişim',
+    footerContactText: 'İletişim bilgileri eklenecek.',
+    footerCreatorsTitle: 'Hazırlayanlar',
+    footerCreatorsText: 'Hazırlayanların ad soyad bilgileri eklenecek.',
+    footerMadeWith: 'Uzay mühendisliği öğrencileri tarafından kalp ile yapılmıştır.',
   },
   en: {
     title: 'ITU - Astronautical Engineering Archive',
     description: 'A course archive prepared by Astronautical Engineering students.',
+    brandEyebrow: 'Course Archive',
     searchPlaceholder: 'Search by course code, name, or instructor...',
     searchNote: 'Search only applies within the selected tab.',
     instructorPanelTitle: 'Instructors',
@@ -253,6 +260,11 @@ const translate = {
     preview: 'Preview',
     download: 'Download',
     previewUnavailable: 'This file type may not be previewable in the browser. You can download it instead.',
+    footerContactTitle: 'Contact',
+    footerContactText: 'Contact information will be added.',
+    footerCreatorsTitle: 'Creators',
+    footerCreatorsText: 'Creator names will be added.',
+    footerMadeWith: 'Made with heart by Astronautical Engineering students.',
   },
 } as const;
 
@@ -844,10 +856,15 @@ export default function Home() {
             return courseInstructorOptions.includes(selectedArchiveInstructor);
           });
     const years = Array.from(new Set(instructorFilteredItems.map((item) => item.yil))).sort((left, right) => getCourseYearStart(left) - getCourseYearStart(right));
-    const activeYear = selectedArchiveYear && years.includes(selectedArchiveYear) ? selectedArchiveYear : null;
+    const activeYear = selectedArchiveYear && years.includes(selectedArchiveYear) ? selectedArchiveYear : years[0] ?? null;
     const yearItems = activeYear ? instructorFilteredItems.filter((item) => item.yil === activeYear) : [];
     const terms: string[] = Array.from(new Set(yearItems.map((item) => getArchiveTerm(getArchivePath(item), language))));
-    const activeTerm = selectedArchiveTerm && terms.includes(selectedArchiveTerm) ? selectedArchiveTerm : null;
+    const activeTerm =
+      selectedArchiveTerm === 'all'
+        ? null
+        : selectedArchiveTerm && terms.includes(selectedArchiveTerm)
+          ? selectedArchiveTerm
+          : terms[0] ?? null;
     const termItems = activeTerm ? yearItems.filter((item) => getArchiveTerm(getArchivePath(item), language) === activeTerm) : yearItems;
     const archiveTree = termItems.reduce<ArchiveFolderNode>((tree, item) => {
       const folderSegments = getArchiveFolderSegments(item, ders);
@@ -1082,12 +1099,12 @@ export default function Home() {
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
-                    onClick={() => setSelectedArchiveTerm(null)}
+                    onClick={() => setSelectedArchiveTerm('all')}
                     className="rounded-full border px-4 py-2 text-xs font-semibold transition hover:opacity-90"
                     style={{
                       borderColor: accentColor,
-                      backgroundColor: activeTerm === null ? accentColor : 'transparent',
-                      color: activeTerm === null ? getContrastTextColor(accentColor) : textColor,
+                      backgroundColor: selectedArchiveTerm === 'all' ? accentColor : 'transparent',
+                      color: selectedArchiveTerm === 'all' ? getContrastTextColor(accentColor) : textColor,
                     }}
                   >
                     {locale.archiveAll}
@@ -1219,19 +1236,31 @@ export default function Home() {
   }, [isInstructorInputFocused, instructorQuery, instructorSuggestions]);
 
   return (
-    <main className="min-h-screen px-6 py-10 max-w-7xl mx-auto bg-[var(--background)] text-[var(--foreground)] transition-colors duration-300">
-      <div className="sticky top-0 z-30 -mx-6 mb-6 bg-[var(--background)]/95 px-6 pb-4 pt-2 backdrop-blur-md">
+    <main className="min-h-screen px-4 py-5 sm:px-6 sm:py-10 max-w-7xl mx-auto bg-[var(--background)] text-[var(--foreground)] transition-colors duration-300">
+      <div className="sticky top-0 z-30 -mx-4 mb-5 bg-[var(--background)]/95 px-4 pb-3 pt-2 backdrop-blur-md sm:-mx-6 sm:mb-6 sm:px-6 sm:pb-4">
         <div className="mx-auto max-w-7xl rounded-3xl border border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-950/90">
-          <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-            <div className="max-w-xl px-6 pt-5">
-              <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">{locale.title}</h1>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{locale.description}</p>
+          <div className="flex items-start justify-between gap-3 p-4 sm:p-5 md:items-center">
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-slate-950 text-sm font-black tracking-tight text-white shadow-sm dark:border-slate-700 dark:bg-white dark:text-slate-950 sm:h-14 sm:w-14">
+                İTÜ
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400 sm:text-xs">
+                  {locale.brandEyebrow}
+                </p>
+                <h1 className="mt-1 text-xl font-semibold leading-tight text-slate-900 dark:text-white sm:text-3xl">
+                  {locale.title}
+                </h1>
+                <p className="mt-1 hidden max-w-2xl text-sm text-slate-600 dark:text-slate-400 sm:block">
+                  {locale.description}
+                </p>
+              </div>
             </div>
 
-            <div className="ml-auto flex shrink-0 flex-col items-end gap-3 px-6 pb-5 pt-5">
+            <div className="ml-auto flex shrink-0 flex-col items-end gap-2 sm:gap-3">
               <div className="flex flex-nowrap items-center gap-2">
-                <div className="relative flex w-[6.75rem] flex-none items-center overflow-hidden rounded-full border border-[color:var(--border)] bg-[var(--surface)] p-1 shadow-sm backdrop-blur-sm">
-                  <span className={`absolute left-1 top-1 z-0 h-9 w-12 rounded-full bg-[var(--foreground)] transition-transform duration-300 ease-out ${language === 'en' ? 'translate-x-12' : 'translate-x-0'}`} />
+                <div className="relative flex w-[5.75rem] flex-none items-center overflow-hidden rounded-full border border-[color:var(--border)] bg-[var(--surface)] p-1 shadow-sm backdrop-blur-sm sm:w-[6.75rem]">
+                  <span className={`absolute left-1 top-1 z-0 h-8 w-10 rounded-full bg-[var(--foreground)] transition-transform duration-300 ease-out sm:h-9 sm:w-12 ${language === 'en' ? 'translate-x-10 sm:translate-x-12' : 'translate-x-0'}`} />
                   <button
                     type="button"
                     onClick={() => {
@@ -1241,7 +1270,7 @@ export default function Home() {
                         setIsLanguageChanging(false);
                       }, 150);
                     }}
-                    className={`relative z-10 flex h-9 w-12 items-center justify-center rounded-full border px-0 text-xs font-semibold uppercase transition-colors duration-300 ${language === 'tr' ? 'border-transparent bg-[var(--foreground)] text-[var(--background)]' : 'border-transparent bg-transparent text-[var(--foreground)] opacity-75 hover:opacity-100'}`}
+                    className={`relative z-10 flex h-8 w-10 items-center justify-center rounded-full border px-0 text-[11px] font-semibold uppercase transition-colors duration-300 sm:h-9 sm:w-12 sm:text-xs ${language === 'tr' ? 'border-transparent bg-[var(--foreground)] text-[var(--background)]' : 'border-transparent bg-transparent text-[var(--foreground)] opacity-75 hover:opacity-100'}`}
                   >
                     TR
                   </button>
@@ -1254,14 +1283,14 @@ export default function Home() {
                         setIsLanguageChanging(false);
                       }, 150);
                     }}
-                    className={`relative z-10 flex h-9 w-12 items-center justify-center rounded-full border px-0 text-xs font-semibold uppercase transition-colors duration-300 ${language === 'en' ? 'border-transparent bg-[var(--foreground)] text-[var(--background)]' : 'border-transparent bg-transparent text-[var(--foreground)] opacity-75 hover:opacity-100'}`}
+                    className={`relative z-10 flex h-8 w-10 items-center justify-center rounded-full border px-0 text-[11px] font-semibold uppercase transition-colors duration-300 sm:h-9 sm:w-12 sm:text-xs ${language === 'en' ? 'border-transparent bg-[var(--foreground)] text-[var(--background)]' : 'border-transparent bg-transparent text-[var(--foreground)] opacity-75 hover:opacity-100'}`}
                   >
                     EN
                   </button>
                 </div>
 
                 <div className="relative flex items-center overflow-hidden rounded-full border border-[color:var(--border)] bg-[var(--surface)] p-1 shadow-sm backdrop-blur-sm">
-                  <span className={`absolute left-1 top-1 z-0 h-9 w-9 rounded-full transition-transform duration-300 ease-out ${theme === 'light' ? 'translate-x-0 bg-amber-400' : 'translate-x-9 bg-[var(--foreground)]'}`} />
+                  <span className={`absolute left-1 top-1 z-0 h-8 w-8 rounded-full transition-transform duration-300 ease-out sm:h-9 sm:w-9 ${theme === 'light' ? 'translate-x-0 bg-amber-400' : 'translate-x-8 bg-[var(--foreground)] sm:translate-x-9'}`} />
                   <button
                     type="button"
                     onClick={() => {
@@ -1271,7 +1300,7 @@ export default function Home() {
                         setIsThemeChanging(false);
                       }, 150);
                     }}
-                    className={`relative z-10 flex h-9 w-9 items-center justify-center rounded-full transition-colors duration-200 ${theme === 'light' ? 'text-white' : 'text-[var(--foreground)] opacity-75 hover:opacity-100'}`}
+                    className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full transition-colors duration-200 sm:h-9 sm:w-9 ${theme === 'light' ? 'text-white' : 'text-[var(--foreground)] opacity-75 hover:opacity-100'}`}
                     aria-label="Light mode"
                   >
                     <SunIcon />
@@ -1285,7 +1314,7 @@ export default function Home() {
                         setIsThemeChanging(false);
                       }, 150);
                     }}
-                    className={`relative z-10 flex h-9 w-9 items-center justify-center rounded-full transition-colors duration-200 ${theme === 'dark' ? 'text-amber-400' : 'text-[var(--foreground)] opacity-75 hover:opacity-100'}`}
+                    className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full transition-colors duration-200 sm:h-9 sm:w-9 ${theme === 'dark' ? 'text-amber-400' : 'text-[var(--foreground)] opacity-75 hover:opacity-100'}`}
                     aria-label="Dark mode"
                   >
                     <MoonIcon />
@@ -1297,12 +1326,12 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setMenuOpen((open) => !open)}
-                  className="relative h-12 w-12 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 text-slate-700 dark:text-slate-300 shadow-sm transition hover:bg-slate-50 dark:hover:bg-slate-800"
+                  className="relative h-10 w-10 rounded-full border border-slate-200 bg-white p-2 text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 sm:h-12 sm:w-12"
                   aria-label={menuOpen ? locale.menuClose : locale.menuOpen}
                 >
-                  <span className={`absolute left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-slate-700 dark:bg-slate-400 transition-all duration-200 ${menuOpen ? 'top-1/2 -translate-y-1/2 rotate-45' : 'top-4'}`} />
+                  <span className={`absolute left-1/2 h-0.5 w-5 -translate-x-1/2 rounded-full bg-slate-700 transition-all duration-200 dark:bg-slate-400 sm:w-6 ${menuOpen ? 'top-1/2 -translate-y-1/2 rotate-45' : 'top-3.5 sm:top-4'}`} />
                   <span className={`absolute left-1/2 h-0.5 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full bg-slate-700 dark:bg-slate-400 transition-all duration-200 ${menuOpen ? 'opacity-0' : 'top-1/2 opacity-100'}`} />
-                  <span className={`absolute left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full bg-slate-700 dark:bg-slate-400 transition-all duration-200 ${menuOpen ? 'top-1/2 -translate-y-1/2 -rotate-45' : 'bottom-4'}`} />
+                  <span className={`absolute left-1/2 h-0.5 w-5 -translate-x-1/2 rounded-full bg-slate-700 transition-all duration-200 dark:bg-slate-400 sm:w-6 ${menuOpen ? 'top-1/2 -translate-y-1/2 -rotate-45' : 'bottom-3.5 sm:bottom-4'}`} />
                 </button>
 
                 {menuOpen ? (
@@ -1510,6 +1539,37 @@ export default function Home() {
             </div>
           </aside>
         </div>
+
+      <footer className="mt-14 rounded-3xl border border-slate-200/80 bg-white/80 p-6 shadow-sm backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-950/80 sm:p-8">
+        <div className="grid gap-6 md:grid-cols-[1fr_1fr_auto] md:items-start">
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+              {locale.footerContactTitle}
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-slate-700 dark:text-slate-300">
+              {locale.footerContactText}
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+              {locale.footerCreatorsTitle}
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-slate-700 dark:text-slate-300">
+              {locale.footerCreatorsText}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-900 md:justify-self-end">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-100 text-lg text-rose-500 dark:bg-rose-950/60">
+              ♥
+            </span>
+            <p className="max-w-xs text-sm font-medium leading-6 text-slate-700 dark:text-slate-300">
+              {locale.footerMadeWith}
+            </p>
+          </div>
+        </div>
+      </footer>
 
       {selectedAcademic ? (
         <div
