@@ -123,8 +123,8 @@ const shuffleArray = <T,>(array: T[]) => {
 
 const SunIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="2" />
-    <path d="M12 1v6M12 17v6M23 12h-6M7 12H1M20.485 3.515l-4.243 4.243M7.757 16.243l-4.243 4.243M20.485 20.485l-4.243-4.243M7.757 7.757L3.515 3.515" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2" />
+    <path d="M12 2v3M12 19v3M22 12h-3M5 12H2M19.071 4.929l-2.121 2.121M7.05 16.95l-2.121 2.121M19.071 19.071l-2.121-2.121M7.05 7.05L4.929 4.929" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
   </svg>
 );
 
@@ -163,31 +163,32 @@ const translate = {
     instructorCourses: 'ders',
     instructorDetail: 'Akademisyen Detayı',
     facultyLabel: 'Fakülte',
-    defaultFaculty: 'İTÜ Uzay Bilimleri Fakültesi',
+    defaultFaculty: 'İTÜ Uçak ve Uzay Bilimleri Fakültesi',
     grading: 'Notlandırma',
     attendance: 'Yoklama Önemi',
     teaching: 'Ders Anlatımı',
+    academicRatingIntro: 'Bu puanlar öğrencilerin genel deneyimini özetlemek için vardır; kesin bir yargıdan çok hızlı bir fikir vermeyi amaçlar.',
     givenCourses: 'Verdiği Dersler',
     notRated: 'Henüz puanlanmadı',
-    menu: ['Dersler', 'Öğrenciler', 'Hakkımızda'],
+    menu: ['Dersler', 'Emeği Geçenler', 'Hakkımızda'],
     menuDescriptions: [
       'Arşivdeki derslere, kategorilere ve ders içeriklerine buradan ulaşabilirsiniz.',
-      'Not paylaşan öğrencileri ve arşive katkılarını buradan inceleyebilirsiniz.',
+      'Not, kaynak ve emek paylaşarak arşive katkı veren kişileri buradan inceleyebilirsiniz.',
       'Ders Arşivim projesinin amacı ve kapsamı hakkında bilgi edinebilirsiniz.',
     ],
     openedSection: 'Açılan Bölüm',
     openCourse: 'Açılan Ders',
     close: 'Kapat',
     notesTitle: 'Not Sahipleri',
-    noteOwnerDetail: 'Not Sahibi',
-    noteOwnerIntroFallback: 'Bu öğrenci hakkında kısa tanıtım bilgisi henüz eklenmedi.',
+    noteOwnerDetail: 'Emeği Geçen',
+    noteOwnerIntroFallback: 'Bu katkı sahibi hakkında kısa tanıtım bilgisi henüz eklenmedi.',
     noteOwnerCourseCount: 'Not paylaştığı ders sayısı',
     courseListTitle: 'Ders Listesi',
     courseCodeLabel: 'Ders kodu',
     courseNumberLabel: 'Ders numarası',
     selectPlaceholder: 'Seçiniz',
     openSelectedCourse: 'Dersi Aç',
-    studentListTitle: 'Öğrenci Bilgileri',
+    studentListTitle: 'Emeği Geçenler',
     pastQuestionsTitle: 'Çıkmış Soru',
     courseNoteTitle: 'Ders Notu',
     yearLabel: 'Yıl',
@@ -241,27 +242,28 @@ const translate = {
     grading: 'Grading',
     attendance: 'Attendance Importance',
     teaching: 'Teaching',
+    academicRatingIntro: 'These scores summarize students’ general experience; they are meant as a quick guide, not a final judgment.',
     givenCourses: 'Courses Taught',
     notRated: 'Not rated yet',
-    menu: ['Courses', 'Students', 'About'],
+    menu: ['Courses', 'Contributors', 'About'],
     menuDescriptions: [
       'Browse archived courses, categories, and course content from this section.',
-      'Browse students who shared notes and their archive contributions.',
+      'Browse people who contributed notes, resources, and effort to the archive.',
       'Learn more about the purpose and scope of the Course Archive project.',
     ],
     openedSection: 'Opened Section',
     openCourse: 'Opened Course',
     close: 'Close',
     notesTitle: 'Note Owners',
-    noteOwnerDetail: 'Note Owner',
-    noteOwnerIntroFallback: 'No short introduction has been added for this student yet.',
+    noteOwnerDetail: 'Contributor',
+    noteOwnerIntroFallback: 'No short introduction has been added for this contributor yet.',
     noteOwnerCourseCount: 'Courses with shared notes',
     courseListTitle: 'Course List',
     courseCodeLabel: 'Course code',
     courseNumberLabel: 'Course number',
     selectPlaceholder: 'Select',
     openSelectedCourse: 'Open Course',
-    studentListTitle: 'Student Information',
+    studentListTitle: 'Contributors',
     pastQuestionsTitle: 'Past Question',
     courseNoteTitle: 'Course Note',
     yearLabel: 'Year',
@@ -1043,21 +1045,8 @@ export default function Home() {
           <div className="flex min-w-0 items-start gap-3">
             {getArchiveFileIcon(extension)}
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="break-words text-sm font-medium" style={{ color: textColor }}>
-                  {file.dosya_adi}
-                </p>
-                {file.boyut ? (
-                  <span
-                    className="rounded-full border px-2 py-0.5 text-[11px] font-semibold opacity-80"
-                    style={{ borderColor: `${accentColor}80`, color: textColor }}
-                  >
-                    {file.boyut}
-                  </span>
-                ) : null}
-              </div>
-              <p className="mt-1 break-words text-xs opacity-75" style={{ color: textColor }}>
-                {archivePath}
+              <p className="break-words text-sm font-medium" style={{ color: textColor }}>
+                {file.dosya_adi}
               </p>
               {noteOwners.length ? (
                 <div className="mt-1 flex flex-wrap items-center gap-1 text-xs font-medium opacity-85" style={{ color: textColor }}>
@@ -1079,19 +1068,29 @@ export default function Home() {
               ) : null}
             </div>
           </div>
-          <div className="flex shrink-0 gap-2 sm:pl-3">
+          <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end sm:pl-3">
+            {file.boyut ? (
+              <span
+                className="rounded-full border bg-white/20 px-2.5 py-1 text-[11px] font-semibold opacity-90"
+                style={{ borderColor: `${accentColor}80`, color: textColor }}
+              >
+                {file.boyut}
+              </span>
+            ) : null}
             <button
               type="button"
               onClick={() => setArchivePreview({ ad: file.dosya_adi, url, previewUrl, downloadUrl, uzanti: extension })}
-              className="rounded-full bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700"
+              className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-700 hover:shadow-md"
             >
+              <span aria-hidden>👁️</span>
               {locale.preview}
             </button>
             <a
               href={downloadUrl}
-              className="rounded-full border px-3 py-2 text-xs font-semibold transition hover:opacity-90"
-              style={{ borderColor: accentColor, color: textColor }}
+              className="inline-flex items-center gap-1.5 rounded-full border bg-white/25 px-3.5 py-2 text-xs font-semibold shadow-sm transition hover:-translate-y-0.5 hover:bg-white/40 hover:shadow-md"
+              style={{ borderColor: `${accentColor}cc`, color: textColor }}
             >
+              <span aria-hidden>↓</span>
               {locale.download}
             </a>
           </div>
@@ -1475,7 +1474,7 @@ export default function Home() {
                         setIsThemeChanging(false);
                       }, 150);
                     }}
-                    className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full transition-colors duration-200 sm:h-9 sm:w-9 ${theme === 'dark' ? 'text-amber-400' : 'text-[var(--foreground)] opacity-75 hover:opacity-100'}`}
+                    className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full transition-colors duration-200 sm:h-9 sm:w-9 ${theme === 'dark' ? 'text-sky-400' : 'text-[var(--foreground)] opacity-75 hover:opacity-100'}`}
                     aria-label="Dark mode"
                   >
                     <MoonIcon />
@@ -1759,39 +1758,49 @@ export default function Home() {
               </button>
             </div>
 
-            <div className="grid gap-4 p-6 md:grid-cols-3">
-              {[
-                { label: locale.grading, data: selectedAcademic.notlandirma },
-                { label: locale.attendance, data: selectedAcademic.yoklama_onemi },
-                { label: locale.teaching, data: selectedAcademic.ders_anlatimi },
-              ].map(({ label, data }) => (
-                <article key={label} className="rounded-3xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-950">
-                  <h3 className="font-semibold text-slate-900 dark:text-white">{label}</h3>
-                  <div className="mt-3 flex items-center gap-1" aria-label={data.puan === null ? locale.notRated : `${data.puan} / 5`}>
-                    {[1, 2, 3, 4, 5].map((point) => (
-                      <span
-                        key={point}
-                        className={`h-3 w-3 rounded-full ${
-                          data.puan !== null && point <= data.puan ? 'bg-amber-400' : 'bg-slate-200 dark:bg-slate-700'
-                        }`}
-                      />
-                    ))}
-                    <span className="ml-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
-                      {data.puan === null ? '— / 5' : `${data.puan} / 5`}
-                    </span>
-                  </div>
-                  <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-400">{data.aciklama}</p>
-                </article>
-              ))}
+            <div className="p-6">
+              <p className="max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+                {locale.academicRatingIntro}
+              </p>
+              <div className="mt-4 grid gap-4 md:grid-cols-3">
+                {[
+                  { label: locale.grading, data: selectedAcademic.notlandirma },
+                  { label: locale.attendance, data: selectedAcademic.yoklama_onemi },
+                  { label: locale.teaching, data: selectedAcademic.ders_anlatimi },
+                ].map(({ label, data }) => (
+                  <article key={label} className="rounded-3xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-950">
+                    <h3 className="font-semibold text-slate-900 dark:text-white">{label}</h3>
+                    <div className="mt-3 flex items-center gap-1" aria-label={data.puan === null ? locale.notRated : `${data.puan} / 5`}>
+                      {[1, 2, 3, 4, 5].map((point) => (
+                        <span
+                          key={point}
+                          className={`h-3 w-3 rounded-full ${
+                            data.puan !== null && point <= data.puan ? 'bg-amber-400' : 'bg-slate-200 dark:bg-slate-700'
+                          }`}
+                        />
+                      ))}
+                      <span className="ml-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                        {data.puan === null ? '— / 5' : `${data.puan} / 5`}
+                      </span>
+                    </div>
+                  </article>
+                ))}
+              </div>
             </div>
 
             <div className="border-t border-slate-200 p-6 dark:border-slate-700">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{locale.givenCourses}</h3>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {selectedAcademic.dersler.map((ders) => (
-                  <div
+                  <button
+                    type="button"
                     key={ders.id}
-                    className="relative rounded-2xl border px-4 py-3"
+                    onClick={() => {
+                      setSelectedAcademicName(null);
+                      setIsAcademicModalClosing(false);
+                      openCourseModalFromList(ders.id);
+                    }}
+                    className="relative rounded-2xl border px-4 py-3 text-left transition hover:-translate-y-0.5 hover:shadow-md"
                     style={{
                       borderColor: ders.renk_kodu ?? '#64748b',
                       backgroundColor: getCardBackground(ders.renk_kodu ?? '#64748b'),
@@ -1815,7 +1824,7 @@ export default function Home() {
                     <p className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
                       {ders.yil} · {ders.donem}
                     </p>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
