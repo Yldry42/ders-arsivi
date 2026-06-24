@@ -29,6 +29,7 @@ type Degerlendirme = {
 
 type Akademisyen = {
   ad: string;
+  fakulte?: string;
   notlandirma?: Degerlendirme;
   yoklama_onemi?: Degerlendirme;
   ders_anlatimi?: Degerlendirme;
@@ -161,6 +162,8 @@ const translate = {
     instructorSelected: 'Seçili',
     instructorCourses: 'ders',
     instructorDetail: 'Akademisyen Detayı',
+    facultyLabel: 'Fakülte',
+    defaultFaculty: 'İTÜ Uzay Bilimleri Fakültesi',
     grading: 'Notlandırma',
     attendance: 'Yoklama Önemi',
     teaching: 'Ders Anlatımı',
@@ -233,6 +236,8 @@ const translate = {
     instructorSelected: 'Selected',
     instructorCourses: 'courses',
     instructorDetail: 'Instructor Detail',
+    facultyLabel: 'Faculty',
+    defaultFaculty: 'ITU Faculty of Aeronautics and Astronautics',
     grading: 'Grading',
     attendance: 'Attendance Importance',
     teaching: 'Teaching',
@@ -1405,10 +1410,7 @@ export default function Home() {
                 İTÜ
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400 sm:text-xs">
-                  {locale.brandEyebrow}
-                </p>
-                <h1 className="mt-1 text-xl font-semibold leading-tight text-slate-900 dark:text-white sm:text-3xl">
+                <h1 className="text-xl font-semibold leading-tight text-slate-900 dark:text-white sm:text-3xl">
                   {locale.title}
                 </h1>
                 <p className="mt-1 hidden max-w-2xl text-sm text-slate-600 dark:text-slate-400 sm:block">
@@ -1417,8 +1419,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="ml-auto flex shrink-0 flex-col items-end gap-2 sm:gap-3">
-              <div className="flex flex-nowrap items-center gap-2">
+            <div className="ml-auto flex shrink-0 flex-nowrap items-center gap-2">
                 <div className="relative flex w-[5.75rem] flex-none items-center overflow-hidden rounded-full border border-[color:var(--border)] bg-[var(--surface)] p-1 shadow-sm backdrop-blur-sm sm:w-[6.75rem]">
                   <span className={`absolute left-1 top-1 z-0 h-8 w-10 rounded-full bg-[var(--foreground)] transition-transform duration-300 ease-out sm:h-9 sm:w-12 ${language === 'en' ? 'translate-x-10 sm:translate-x-12' : 'translate-x-0'}`} />
                   <button
@@ -1480,7 +1481,6 @@ export default function Home() {
                     <MoonIcon />
                   </button>
                 </div>
-              </div>
 
               <div className="relative">
                 <button
@@ -1746,6 +1746,9 @@ export default function Home() {
                 <h2 className="text-3xl font-semibold text-slate-900 dark:text-white">
                   {selectedAcademic.ad}
                 </h2>
+                <p className="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">
+                  {locale.facultyLabel}: {selectedAcademic.fakulte ?? locale.defaultFaculty}
+                </p>
               </div>
               <button
                 type="button"
