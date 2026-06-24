@@ -38,6 +38,8 @@ type ArsivDosyasi = {
   dosya_adi: string;
   yerel_yol?: string;
   url?: string;
+  boyut?: string;
+  boyut_byte?: number;
 };
 
 type ArsivOnizleme = {
@@ -846,9 +848,19 @@ export default function Home() {
           <div className="flex min-w-0 items-start gap-3">
             {getArchiveFileIcon(extension)}
             <div className="min-w-0">
-              <p className="break-words text-sm font-medium" style={{ color: textColor }}>
-                {file.dosya_adi}
-              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="break-words text-sm font-medium" style={{ color: textColor }}>
+                  {file.dosya_adi}
+                </p>
+                {file.boyut ? (
+                  <span
+                    className="rounded-full border px-2 py-0.5 text-[11px] font-semibold opacity-80"
+                    style={{ borderColor: `${accentColor}80`, color: textColor }}
+                  >
+                    {file.boyut}
+                  </span>
+                ) : null}
+              </div>
               <p className="mt-1 break-words text-xs opacity-75" style={{ color: textColor }}>
                 {archivePath}
               </p>
