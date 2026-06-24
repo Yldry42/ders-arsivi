@@ -43,6 +43,7 @@ type ArsivDosyasi = {
 type ArsivOnizleme = {
   ad: string;
   url: string;
+  downloadUrl: string;
   uzanti: string;
 };
 
@@ -338,6 +339,9 @@ const getArchiveFileUrl = (item: ArsivDosyasi) => {
   const path = getArchivePath(item);
   return item.url ? buildArchivePublicUrl(path) : `/arsiv/${path.split(/[\\/]/).filter(Boolean).map((segment) => encodeURIComponent(segment)).join('/')}`;
 };
+
+const getArchiveDownloadUrl = (item: ArsivDosyasi) =>
+  `/api/download?url=${encodeURIComponent(getArchiveFileUrl(item))}&name=${encodeURIComponent(item.dosya_adi)}`;
 
 const getFileExtension = (fileName: string) => {
   const extension = fileName.split('.').pop();
@@ -831,6 +835,7 @@ export default function Home() {
     const renderArchiveFileRow = (file: ArsivDosyasi) => {
       const extension = getFileExtension(file.dosya_adi);
       const url = getArchiveFileUrl(file);
+      const downloadUrl = getArchiveDownloadUrl(file);
       const archivePath = getArchivePath(file);
 
       return (
@@ -852,14 +857,13 @@ export default function Home() {
           <div className="flex shrink-0 gap-2 sm:pl-3">
             <button
               type="button"
-              onClick={() => setArchivePreview({ ad: file.dosya_adi, url, uzanti: extension })}
+              onClick={() => setArchivePreview({ ad: file.dosya_adi, url, downloadUrl, uzanti: extension })}
               className="rounded-full bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700"
             >
               {locale.preview}
             </button>
             <a
-              href={url}
-              download
+              href={downloadUrl}
               className="rounded-full border px-3 py-2 text-xs font-semibold transition hover:opacity-90"
               style={{ borderColor: accentColor, color: textColor }}
             >
@@ -1723,19 +1727,27 @@ export default function Home() {
                   {archivePreview.uzanti || 'dosya'}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setArchivePreview(null)}
-                className="shrink-0 rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
-              >
-                {locale.close}
-              </button>
+              <div className="flex shrink-0 items-center gap-2">
+                <a
+                  href={archivePreview.downloadUrl}
+                  className="rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-900 transition hover:bg-slate-100 dark:border-slate-700 dark:text-white dark:hover:bg-slate-800"
+                >
+                  {locale.download}
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setArchivePreview(null)}
+                  className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+                >
+                  {locale.close}
+                </button>
+              </div>
             </div>
 
             <div className="min-h-[60vh] flex-1 bg-slate-100 p-4 dark:bg-slate-950">
               {['pdf', 'txt', 'md', 'csv'].includes(archivePreview.uzanti) ? (
                 <iframe
-                  src={archivePreview.url}
+                  src={archivePreview.uzanti === 'pdf' ? `${archivePreview.url}#toolbar=0&navpanes=0` : archivePreview.url}
                   title={archivePreview.ad}
                   className="h-[65vh] w-full rounded-2xl border border-slate-200 bg-white dark:border-slate-700"
                 />
@@ -1750,8 +1762,7 @@ export default function Home() {
                     {locale.previewUnavailable}
                   </p>
                   <a
-                    href={archivePreview.url}
-                    download
+                    href={archivePreview.downloadUrl}
                     className="mt-5 rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
                   >
                     {locale.download}
