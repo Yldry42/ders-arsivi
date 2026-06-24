@@ -1,0 +1,191 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root,
+html[data-theme="light"] {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --surface: #ffffff;
+  --surface-muted: #f8fafc;
+  --border: #e2e8f0;
+}
+
+html.dark,
+html[data-theme="dark"] {
+  --background: #050505;
+  --foreground: #f3f4f6;
+  --surface: #0b0f14;
+  --surface-muted: #111827;
+  --border: #334155;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes underlineSlide {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes tabSlideIn {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes sectionModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modalBackdropIn {
+  from {
+    background-color: rgb(15 23 42 / 0%);
+  }
+  to {
+    background-color: rgb(15 23 42 / 70%);
+  }
+}
+
+@keyframes sectionModalOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+}
+
+@keyframes modalBackdropOut {
+  from {
+    background-color: rgb(15 23 42 / 70%);
+  }
+  to {
+    background-color: rgb(15 23 42 / 0%);
+  }
+}
+
+.animate-fade-in-out {
+  animation: fadeInOut 300ms ease-in-out;
+}
+
+.animate-theme-change {
+  animation: fadeInOut 300ms ease-in-out;
+}
+
+.animate-tab-slide {
+  animation: tabSlideIn 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-section-modal {
+  animation: sectionModalIn 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-modal-backdrop {
+  animation: modalBackdropIn 260ms ease-out both;
+}
+
+.animate-section-modal-out {
+  animation: sectionModalOut 240ms ease-in both;
+}
+
+.animate-modal-backdrop-out {
+  animation: modalBackdropOut 240ms ease-in both;
+}
+
+html {
+  scrollbar-gutter: stable;
+  transition: background-color 300ms ease-in-out, color 300ms ease-in-out;
+}
+
+html.dark,
+html[data-theme="dark"],
+html.dark body,
+html[data-theme="dark"] body {
+  background-color: #050505;
+  color: #f3f4f6;
+}
+
+html[data-theme="light"],
+html[data-theme="light"] body {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+.course-modal-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-gutter: auto;
+  scrollbar-color: var(--course-modal-scrollbar-thumb) var(--course-modal-scrollbar-track);
+}
+
+.course-modal-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.course-modal-scrollbar::-webkit-scrollbar-track {
+  background: var(--course-modal-scrollbar-track);
+  border-radius: 999px;
+}
+
+.course-modal-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--course-modal-scrollbar-thumb);
+  border: 2px solid var(--course-modal-scrollbar-track);
+  border-radius: 999px;
+}
+
+.course-modal-scrollbar::-webkit-scrollbar-corner {
+  background: var(--course-modal-scrollbar-track);
+}
+
+/* Smooth button transitions */
+button {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 300ms ease-in-out, color 300ms ease-in-out;
+}

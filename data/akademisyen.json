@@ -1,0 +1,56 @@
+{
+  "varsayilan_degerlendirme": {
+    "notlandirma": {
+      "puan": null,
+      "aciklama": "Bu akademisyen için notlandırma değerlendirmesi henüz eklenmedi."
+    },
+    "yoklama_onemi": {
+      "puan": null,
+      "aciklama": "Bu akademisyen için yoklama değerlendirmesi henüz eklenmedi."
+    },
+    "ders_anlatimi": {
+      "puan": null,
+      "aciklama": "Bu akademisyen için ders anlatımı değerlendirmesi henüz eklenmedi."
+    }
+  },
+  "akademisyenler": [
+    { "ad": "Alim Rüstem Aslan" },
+    { "ad": "Aslı Kantarcı" },
+    { "ad": "Aydın Mısırlıoğlu" },
+    { "ad": "Ayşe Gül Güngör" },
+    { "ad": "Ayşe Zeynep Akalın Özdemir" },
+    { "ad": "Aytaç Arıkoğlu" },
+    { "ad": "Bayram Çelik" },
+    { "ad": "Bülent Tutkun" },
+    { "ad": "Canan Sağbilge" },
+    { "ad": "Cuma Yarım" },
+    { "ad": "Çiğdem Özkan Aygün" },
+    { "ad": "Demet Balkan" },
+    { "ad": "Demet Çilden Güler" },
+    { "ad": "Duygu Erdem" },
+    { "ad": "Egnar Özdikililer" },
+    { "ad": "Emre Koyuncu" },
+    { "ad": "Erdem Onur Özyurt" },
+    { "ad": "Fırat Oğuz Edis" },
+    { "ad": "Fuat Topuz" },
+    { "ad": "Gülçin Çivi Bilir" },
+    { "ad": "Hülya Cebeci" },
+    { "ad": "Hüsnü Barbaros Soyer" },
+    { "ad": "Kazım Yavuz Ekşi" },
+    { "ad": "Mehmet Murat Sunar" },
+    { "ad": "Nilgün Eker" },
+    { "ad": "Nurhan Çolakoğlu" },
+    { "ad": "Oğuzcan İnal" },
+    { "ad": "Okşan Çetiner" },
+    { "ad": "Pelin Helvacı" },
+    { "ad": "Ramazan Yeniçeri" },
+    { "ad": "Sait Kofoğlu" },
+    { "ad": "Seher Eken" },
+    { "ad": "Sevgi Harman" },
+    { "ad": "Tahir Soyugüzel" },
+    { "ad": "Timur Aydın" },
+    { "ad": "Vedat Ziya Doğan" },
+    { "ad": "Yasemin Yılmaz Yüksek" },
+    { "ad": "Zerefşan Kaymaz" }
+  ]
+}

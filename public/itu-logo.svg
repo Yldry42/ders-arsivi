@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <circle cx="60" cy="60" r="54" fill="#00296b" />
+  <circle cx="60" cy="60" r="44" fill="#ffffff" />
+  <text x="60" y="70" font-family="Arial, sans-serif" font-size="52" font-weight="700" text-anchor="middle" fill="#00296b">ITU</text>
+</svg>
