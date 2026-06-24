@@ -388,7 +388,8 @@ const getArchiveFileIcon = (extension: string) => {
 
 export default function Home() {
   const dersList = dersler as Ders[];
-  const archiveList = arsivVerileri as ArsivDosyasi[];
+  const fallbackArchiveList = arsivVerileri as ArsivDosyasi[];
+  const [archiveList, setArchiveList] = useState<ArsivDosyasi[]>(fallbackArchiveList);
 
   const [language, setLanguage] = useState<'tr' | 'en'>('tr');
   const locale = translate[language];
@@ -411,6 +412,32 @@ export default function Home() {
       document.documentElement.setAttribute('data-theme', 'light');
       document.documentElement.style.colorScheme = 'light';
     }
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadArchiveFromR2 = async () => {
+      try {
+        const response = await fetch('/api/archive');
+        if (!response.ok) return;
+
+        const data = (await response.json()) as ArsivDosyasi[];
+        if (isActive && Array.isArray(data) && data.length > 0) {
+          setArchiveList(data);
+        }
+      } catch (error) {
+        if (debugArchiveMatches) {
+          console.warn('[Ders Arşivi] R2 arşiv listesi alınamadı, yerel arsiv.json kullanılacak.', error);
+        }
+      }
+    };
+
+    loadArchiveFromR2();
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const setThemeMode = (nextTheme: 'light' | 'dark') => {
