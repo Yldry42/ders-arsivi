@@ -620,6 +620,10 @@ export default function Home() {
     getTermOrder(left.donem) - getTermOrder(right.donem) ||
     left.ders_adi.localeCompare(right.ders_adi, 'tr');
 
+  const compareCourseAlphabetically = (left: Ders, right: Ders) =>
+    `${left.kod}${left.no}`.localeCompare(`${right.kod}${right.no}`, 'tr', { numeric: true }) ||
+    left.ders_adi.localeCompare(right.ders_adi, 'tr');
+
   const getCourseOfferings = (course: Ders) =>
     dersList
       .filter((item) => getCourseCodeKey(item) === getCourseCodeKey(course))
@@ -704,7 +708,7 @@ export default function Home() {
         }
       });
 
-    return Array.from(courseMap.values());
+    return Array.from(courseMap.values()).sort(compareCourseAlphabetically);
   }, [displayedDersler]);
 
   const groupedDisplayedDersler = useMemo(() => {
@@ -1739,7 +1743,6 @@ export default function Home() {
                     <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
                       {ders.kod} {getDisplayNo(ders)} — {language === 'en' && ders.ders_adi_en ? ders.ders_adi_en : ders.ders_adi}
                     </h2>
-                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{ders.donem} · {ders.yil}</p>
                   </div>
                   <button
                     type="button"
