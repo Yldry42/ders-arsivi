@@ -45,6 +45,7 @@ type ArsivDosyasi = {
 type ArsivOnizleme = {
   ad: string;
   url: string;
+  previewUrl: string;
   downloadUrl: string;
   uzanti: string;
 };
@@ -344,6 +345,9 @@ const getArchiveFileUrl = (item: ArsivDosyasi) => {
 
 const getArchiveDownloadUrl = (item: ArsivDosyasi) =>
   `/api/download?url=${encodeURIComponent(getArchiveFileUrl(item))}&name=${encodeURIComponent(item.dosya_adi)}`;
+
+const getArchivePreviewUrl = (item: ArsivDosyasi) =>
+  `/api/preview?url=${encodeURIComponent(getArchiveFileUrl(item))}&name=${encodeURIComponent(item.dosya_adi)}`;
 
 const getFileExtension = (fileName: string) => {
   const extension = fileName.split('.').pop();
@@ -837,6 +841,7 @@ export default function Home() {
     const renderArchiveFileRow = (file: ArsivDosyasi) => {
       const extension = getFileExtension(file.dosya_adi);
       const url = getArchiveFileUrl(file);
+      const previewUrl = getArchivePreviewUrl(file);
       const downloadUrl = getArchiveDownloadUrl(file);
       const archivePath = getArchivePath(file);
 
@@ -869,7 +874,7 @@ export default function Home() {
           <div className="flex shrink-0 gap-2 sm:pl-3">
             <button
               type="button"
-              onClick={() => setArchivePreview({ ad: file.dosya_adi, url, downloadUrl, uzanti: extension })}
+              onClick={() => setArchivePreview({ ad: file.dosya_adi, url, previewUrl, downloadUrl, uzanti: extension })}
               className="rounded-full bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700"
             >
               {locale.preview}
@@ -1759,14 +1764,14 @@ export default function Home() {
             <div className="min-h-[60vh] flex-1 bg-slate-100 p-4 dark:bg-slate-950">
               {['pdf', 'txt', 'md', 'csv'].includes(archivePreview.uzanti) ? (
                 <iframe
-                  src={archivePreview.uzanti === 'pdf' ? `${archivePreview.url}#toolbar=0&navpanes=0` : archivePreview.url}
+                  src={archivePreview.uzanti === 'pdf' ? `${archivePreview.previewUrl}#toolbar=0&navpanes=0` : archivePreview.previewUrl}
                   title={archivePreview.ad}
                   className="h-[65vh] w-full rounded-2xl border border-slate-200 bg-white dark:border-slate-700"
                 />
               ) : ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(archivePreview.uzanti) ? (
                 <div className="flex h-[65vh] items-center justify-center overflow-auto rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={archivePreview.url} alt={archivePreview.ad} className="max-h-full max-w-full object-contain" />
+                  <img src={archivePreview.previewUrl} alt={archivePreview.ad} className="max-h-full max-w-full object-contain" />
                 </div>
               ) : (
                 <div className="flex h-[65vh] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-900">
