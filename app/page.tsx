@@ -4,6 +4,7 @@ import dersler from '../data/dersler.json';
 import akademisyenVerileri from '../data/akademisyen.json';
 import arsivVerileri from '../data/arsiv.json';
 import notSahipleriVerileri from '../data/not-sahipleri.json';
+import notDagilimlariVerileri from '../data/not-dagilimlari.json';
 
 type Ders = {
   id: number;
@@ -56,6 +57,16 @@ type ArchiveFolderNode = {
   name: string;
   files: ArsivDosyasi[];
   folders: Record<string, ArchiveFolderNode>;
+};
+
+type HarfNotuDagilimi = {
+  baslik?: string;
+  dagilim: Record<string, number>;
+};
+
+type NotDagilimlariVerisi = {
+  dersler?: Record<string, HarfNotuDagilimi[]>;
+  akademisyenler?: Record<string, HarfNotuDagilimi[]>;
 };
 
 type NotSahipleriVerisi = {
@@ -168,6 +179,7 @@ const translate = {
     attendance: 'Yoklama Önemi',
     teaching: 'Ders Anlatımı',
     academicRatingIntro: 'Bu puanlar öğrencilerin genel deneyimini özetlemek için vardır; kesin bir yargıdan çok hızlı bir fikir vermeyi amaçlar.',
+    gradeDistributionTitle: 'Harf Notu Dağılımı',
     givenCourses: 'Verdiği Dersler',
     notRated: 'Henüz puanlanmadı',
     menu: ['Dersler', 'Emeği Geçenler', 'Hakkımızda'],
@@ -243,6 +255,7 @@ const translate = {
     attendance: 'Attendance Importance',
     teaching: 'Teaching',
     academicRatingIntro: 'These scores summarize students’ general experience; they are meant as a quick guide, not a final judgment.',
+    gradeDistributionTitle: 'Letter Grade Distribution',
     givenCourses: 'Courses Taught',
     notRated: 'Not rated yet',
     menu: ['Courses', 'Contributors', 'About'],
@@ -434,6 +447,7 @@ export default function Home() {
   const dersList = dersler as Ders[];
   const fallbackArchiveList = arsivVerileri as ArsivDosyasi[];
   const noteOwnerData = notSahipleriVerileri as NotSahipleriVerisi;
+  const gradeDistributionData = notDagilimlariVerileri as NotDagilimlariVerisi;
   const [archiveList, setArchiveList] = useState<ArsivDosyasi[]>(fallbackArchiveList);
 
   const [language, setLanguage] = useState<'tr' | 'en'>('tr');
@@ -538,6 +552,7 @@ export default function Home() {
   const [selectedArchiveTerm, setSelectedArchiveTerm] = useState<string | null>(null);
   const [openArchiveFolders, setOpenArchiveFolders] = useState<Record<string, boolean>>({});
   const [archivePreview, setArchivePreview] = useState<ArsivOnizleme | null>(null);
+  const [archivePreviewZoom, setArchivePreviewZoom] = useState(100);
   const [isHeaderPinned, setIsHeaderPinned] = useState(false);
   const headerSentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -636,6 +651,10 @@ export default function Home() {
     setOpenArchiveFolders({});
     setArchivePreview(null);
   }, [selectedDersId]);
+
+  useEffect(() => {
+    setArchivePreviewZoom(100);
+  }, [archivePreview]);
 
   const categoryColors = useMemo(
     () =>
@@ -882,6 +901,7 @@ export default function Home() {
 
   const getSuffixFor = (d: Ders) => {
     if (d.kod === 'TUR' || d.kod === 'ATA') return '';
+    if (`${d.kod}${d.no}` === 'ING100') return '';
     if (`${d.kod}${d.no}` === 'UUM511') return '';
     const name = (d.ders_adi || '').toLowerCase();
     if (/laboratuvar|laboratuvarı|lab/.test(name)) return 'EL';
@@ -970,6 +990,82 @@ export default function Home() {
 
     return { name: selectedNoteOwnerName, intro, courseCount, files: [] as { ders: Ders; file: ArsivDosyasi }[] };
   }, [courseArchiveMap, dersList, selectedNoteOwnerName]);
+
+  const getContributorInitials = (name: string) =>
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toLocaleUpperCase('tr'))
+      .join('');
+
+  const getGradeDistributionEntries = (source: Record<string, HarfNotuDagilimi[]> | undefined, keys: string[]) => {
+    if (!source) return [];
+    const normalizedKeys = new Set(keys.map(normalizeArchiveToken));
+    const match = Object.entries(source).find(([key]) => normalizedKeys.has(normalizeArchiveToken(key)));
+    return match?.[1] ?? [];
+  };
+
+  const getCourseGradeDistributions = (course: Ders) =>
+    getGradeDistributionEntries(gradeDistributionData.dersler, [
+      `${course.kod}${course.no}`,
+      `${course.kod}${getDisplayNo(course)}`,
+      `${course.kod} ${course.no}`,
+      `${course.kod} ${getDisplayNo(course)}`,
+    ]);
+
+  const getAcademicGradeDistributions = (academicName: string) =>
+    getGradeDistributionEntries(gradeDistributionData.akademisyenler, [academicName]);
+
+  const renderGradeDistributions = (entries: HarfNotuDagilimi[], accentColor = '#64748b', variant: 'tinted' | 'plain' = 'tinted') => {
+    if (!entries.length) return null;
+    const gradeOrder = ['AA', 'BA+', 'BA', 'BB+', 'BB', 'CB+', 'CB', 'CC+', 'CC', 'DC+', 'DC', 'DD+', 'DD', 'FD', 'FF', 'VF'];
+
+    return (
+      <div className="space-y-4">
+        {entries.map((entry, index) => {
+          const labels = Array.from(new Set([...gradeOrder, ...Object.keys(entry.dagilim)])).filter((label) => entry.dagilim[label] !== undefined);
+          const maxCount = Math.max(...labels.map((label) => entry.dagilim[label] ?? 0), 1);
+
+          return (
+            <article
+              key={`${entry.baslik ?? 'distribution'}-${index}`}
+              className={`rounded-2xl border p-4 ${
+                variant === 'plain'
+                  ? 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-950'
+                  : 'border-white/30 bg-white/15'
+              }`}
+            >
+              {entry.baslik ? (
+                <p className="mb-3 text-sm font-semibold">
+                  {entry.baslik}
+                </p>
+              ) : null}
+              <div className="space-y-2">
+                {labels.map((label) => {
+                  const count = entry.dagilim[label] ?? 0;
+                  const percentage = Math.max(4, (count / maxCount) * 100);
+
+                  return (
+                    <div key={label} className="grid grid-cols-[2.25rem_minmax(0,1fr)_3rem] items-center gap-2 text-xs">
+                      <span className="font-bold tracking-wide">{label}</span>
+                      <div className={`h-2.5 overflow-hidden rounded-full ${variant === 'plain' ? 'bg-slate-200 dark:bg-slate-800' : 'bg-white/30'}`}>
+                        <div
+                          className="h-full rounded-full"
+                          style={{ width: `${percentage}%`, backgroundColor: accentColor }}
+                        />
+                      </div>
+                      <span className="text-right font-semibold tabular-nums">{count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    );
+  };
 
   const getArchiveFolderSegments = (item: ArsivDosyasi, ders: Ders) => {
     const courseKeys = new Set(getArchiveKeysForCourse(ders));
@@ -1402,17 +1498,17 @@ export default function Home() {
   return (
     <main className="min-h-screen px-4 py-5 sm:px-6 sm:py-10 max-w-7xl mx-auto bg-[var(--background)] text-[var(--foreground)] transition-colors duration-300">
       <div className="sticky top-0 z-30 -mx-4 mb-5 bg-[var(--background)]/95 px-4 pb-3 pt-2 backdrop-blur-md sm:-mx-6 sm:mb-6 sm:px-6 sm:pb-4">
-        <div className="mx-auto max-w-7xl rounded-3xl border border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-950/90">
-          <div className="flex items-start justify-between gap-3 p-4 sm:p-5 md:items-center">
+        <div className="mx-auto h-[6.75rem] max-w-7xl overflow-visible rounded-3xl border border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-950/90 sm:h-[7.25rem]">
+          <div className="flex h-full items-start justify-between gap-3 p-4 sm:p-5 md:items-center">
             <div className="flex min-w-0 items-center gap-3 sm:gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-slate-950 text-sm font-black tracking-tight text-white shadow-sm dark:border-slate-700 dark:bg-white dark:text-slate-950 sm:h-14 sm:w-14">
                 İTÜ
               </div>
-              <div className="min-w-0">
-                <h1 className="text-xl font-semibold leading-tight text-slate-900 dark:text-white sm:text-3xl">
+              <div className="min-w-0 w-[min(52vw,34rem)] sm:w-[min(58vw,42rem)] lg:w-[42rem]">
+                <h1 className="min-h-[3.1rem] overflow-hidden text-xl font-semibold leading-tight text-slate-900 dark:text-white sm:min-h-[2.55rem] sm:text-3xl" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                   {locale.title}
                 </h1>
-                <p className="mt-1 hidden max-w-2xl text-sm text-slate-600 dark:text-slate-400 sm:block">
+                <p className="mt-1 hidden h-5 max-w-2xl overflow-hidden whitespace-nowrap text-sm text-slate-600 dark:text-slate-400 sm:block">
                   {locale.description}
                 </p>
               </div>
@@ -1674,7 +1770,7 @@ export default function Home() {
                       >
                         <div className="flex items-center justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="truncate font-semibold">{item.name}</p>
+                            <p className="truncate font-semibold">{highlightText(item.name, instructorQuery)}</p>
                             <p className={`mt-1 text-xs ${isSelected ? 'text-white/80 dark:text-slate-700' : 'text-slate-500 dark:text-slate-400'}`}>
                               {item.count} {locale.instructorCourses}
                             </p>
@@ -1788,6 +1884,18 @@ export default function Home() {
               </div>
             </div>
 
+            {(() => {
+              const academicGradeDistributions = getAcademicGradeDistributions(selectedAcademic.ad);
+              return academicGradeDistributions.length ? (
+                <div className="border-t border-slate-200 p-6 dark:border-slate-700">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{locale.gradeDistributionTitle}</h3>
+                  <div className="mt-4">
+                    {renderGradeDistributions(academicGradeDistributions, '#f59e0b', 'plain')}
+                  </div>
+                </div>
+              ) : null;
+            })()}
+
             <div className="border-t border-slate-200 p-6 dark:border-slate-700">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{locale.givenCourses}</h3>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -1850,9 +1958,14 @@ export default function Home() {
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                   {locale.noteOwnerDetail}
                 </p>
-                <h2 className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">
-                  {selectedNoteOwner.name}
-                </h2>
+                <div className="mt-3 flex items-center gap-4">
+                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-base font-black text-white shadow-sm dark:bg-slate-100 dark:text-slate-900">
+                    {getContributorInitials(selectedNoteOwner.name)}
+                  </span>
+                  <h2 className="text-3xl font-semibold text-slate-900 dark:text-white">
+                    {selectedNoteOwner.name}
+                  </h2>
+                </div>
               </div>
               <button
                 type="button"
@@ -2035,9 +2148,12 @@ export default function Home() {
                           setSelectedNoteOwnerName(owner);
                           setIsNoteOwnerModalClosing(false);
                         }}
-                        className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                        className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                       >
-                        {owner}
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-xs font-black text-white dark:bg-slate-100 dark:text-slate-900">
+                          {getContributorInitials(owner)}
+                        </span>
+                        <span className="min-w-0 truncate">{owner}</span>
                       </button>
                     ))}
                   </div>
@@ -2072,6 +2188,7 @@ export default function Home() {
             const archiveItems = courseArchiveMap[ders.id] ?? [];
             const courseOfferings = getCourseOfferings(ders);
             const courseNoteOwners = getCourseNoteOwners(archiveItems, ders);
+            const courseGradeDistributions = getCourseGradeDistributions(ders);
 
             return (
               <div
@@ -2149,6 +2266,12 @@ export default function Home() {
                     <h3 className="text-sm font-semibold uppercase tracking-[0.15em]" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>{locale.courseNoteTitle}</h3>
                     <p className="mt-2 text-sm leading-7" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>{ders.degerlendirme ?? locale.noCourseNoteInfo}</p>
                   </div>
+                  {courseGradeDistributions.length ? (
+                    <div className="space-y-3 border-t pt-6" style={{ borderColor: `${accentColor}80` }}>
+                      <h3 className="text-sm font-semibold uppercase tracking-[0.15em]" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>{locale.gradeDistributionTitle}</h3>
+                      {renderGradeDistributions(courseGradeDistributions, accentColor)}
+                    </div>
+                  ) : null}
                   <div className="border-t pt-6" style={{ borderColor: `${accentColor}80` }}>
                     {renderArchiveExplorer(ders, archiveItems, accentColor)}
                   </div>
@@ -2199,26 +2322,51 @@ export default function Home() {
 
       {archivePreview ? (
         <div
-          className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/75 p-4 animate-modal-backdrop"
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/75 p-2 animate-modal-backdrop sm:p-3"
           onClick={() => setArchivePreview(null)}
         >
           <section
-            className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-2xl backdrop-blur-xl animate-section-modal dark:border-slate-700 dark:bg-slate-900/95"
+            className="flex max-h-[94vh] w-full max-w-[min(96vw,86rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-2xl backdrop-blur-xl animate-section-modal dark:border-slate-700 dark:bg-slate-900/95"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-5 border-b border-slate-200 p-5 dark:border-slate-700">
+            <div className="flex flex-col gap-3 border-b border-slate-200 p-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between sm:px-4">
               <div className="min-w-0">
-                <h2 className="break-words text-xl font-semibold text-slate-900 dark:text-white">
+                <h2 className="break-words text-base font-semibold text-slate-900 dark:text-white sm:text-lg">
                   {archivePreview.ad}
                 </h2>
                 <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
                   {archivePreview.uzanti || 'dosya'}
                 </p>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
+              <div className="flex shrink-0 flex-wrap items-center gap-2">
+                {['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(archivePreview.uzanti) ? (
+                  <div className="flex items-center rounded-full border border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-950">
+                    <button
+                      type="button"
+                      onClick={() => setArchivePreviewZoom((zoom) => Math.max(50, zoom - 10))}
+                      className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-slate-700 transition hover:bg-white disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
+                      disabled={archivePreviewZoom <= 50}
+                      aria-label="Uzaklaştır"
+                    >
+                      −
+                    </button>
+                    <span className="min-w-12 text-center text-xs font-semibold tabular-nums text-slate-600 dark:text-slate-300">
+                      {archivePreviewZoom}%
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setArchivePreviewZoom((zoom) => Math.min(180, zoom + 10))}
+                      className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-slate-700 transition hover:bg-white disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
+                      disabled={archivePreviewZoom >= 180}
+                      aria-label="Yakınlaştır"
+                    >
+                      +
+                    </button>
+                  </div>
+                ) : null}
                 <a
                   href={archivePreview.downloadUrl}
-                  className="rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-900 transition hover:bg-slate-100 dark:border-slate-700 dark:text-white dark:hover:bg-slate-800"
+                  className="rounded-full border border-slate-300 px-3.5 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-900 transition hover:bg-slate-100 dark:border-slate-700 dark:text-white dark:hover:bg-slate-800"
                 >
                   {locale.download}
                 </a>
@@ -2232,20 +2380,25 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="min-h-[60vh] flex-1 bg-slate-100 p-4 dark:bg-slate-950">
+            <div className="min-h-[72vh] flex-1 bg-slate-100 p-2 dark:bg-slate-950 sm:p-3">
               {['pdf', 'txt', 'md', 'csv'].includes(archivePreview.uzanti) ? (
                 <iframe
-                  src={archivePreview.uzanti === 'pdf' ? `${archivePreview.previewUrl}#toolbar=0&navpanes=0` : archivePreview.previewUrl}
+                  src={archivePreview.uzanti === 'pdf' ? `${archivePreview.previewUrl}#toolbar=0&navpanes=0&zoom=${archivePreviewZoom}` : archivePreview.previewUrl}
                   title={archivePreview.ad}
-                  className="h-[65vh] w-full rounded-2xl border border-slate-200 bg-white dark:border-slate-700"
+                  className="h-[76vh] w-full rounded-xl border border-slate-200 bg-white dark:border-slate-700"
                 />
               ) : ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(archivePreview.uzanti) ? (
-                <div className="flex h-[65vh] items-center justify-center overflow-auto rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+                <div className="flex h-[76vh] items-center justify-center overflow-auto rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={archivePreview.previewUrl} alt={archivePreview.ad} className="max-h-full max-w-full object-contain" />
+                  <img
+                    src={archivePreview.previewUrl}
+                    alt={archivePreview.ad}
+                    className="max-h-full max-w-full object-contain transition-transform duration-200"
+                    style={{ transform: `scale(${archivePreviewZoom / 100})` }}
+                  />
                 </div>
               ) : (
-                <div className="flex h-[65vh] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-900">
+                <div className="flex h-[76vh] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-900">
                   <p className="max-w-md text-sm leading-6 text-slate-600 dark:text-slate-300">
                     {locale.previewUnavailable}
                   </p>
