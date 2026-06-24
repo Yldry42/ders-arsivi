@@ -3,6 +3,7 @@ import { CSSProperties, MouseEvent, ReactNode, useEffect, useMemo, useRef, useSt
 import dersler from '../data/dersler.json';
 import akademisyenVerileri from '../data/akademisyen.json';
 import arsivVerileri from '../data/arsiv.json';
+import notSahipleriVerileri from '../data/not-sahipleri.json';
 
 type Ders = {
   id: number;
@@ -54,6 +55,11 @@ type ArchiveFolderNode = {
   name: string;
   files: ArsivDosyasi[];
   folders: Record<string, ArchiveFolderNode>;
+};
+
+type NotSahipleriVerisi = {
+  varsayilan?: string[];
+  dosyalar?: Record<string, string[]>;
 };
 
 const getContrastTextColor = (hex: string) => {
@@ -194,6 +200,7 @@ const translate = {
     archiveAll: 'Tümü',
     archiveGeneral: 'Genel',
     archiveNoFilteredFiles: 'Bu seçim için dosya bulunamadı.',
+    fileNoteOwners: 'Not sahibi',
     preview: 'Ön İzle',
     download: 'İndir',
     previewUnavailable: 'Bu dosya türü tarayıcı içinde ön izlenemeyebilir. İndirerek açabilirsiniz.',
@@ -257,6 +264,7 @@ const translate = {
     archiveAll: 'All',
     archiveGeneral: 'General',
     archiveNoFilteredFiles: 'No files found for this selection.',
+    fileNoteOwners: 'Note owner',
     preview: 'Preview',
     download: 'Download',
     previewUnavailable: 'This file type may not be previewable in the browser. You can download it instead.',
@@ -401,6 +409,7 @@ const getArchiveFileIcon = (extension: string) => {
 export default function Home() {
   const dersList = dersler as Ders[];
   const fallbackArchiveList = arsivVerileri as ArsivDosyasi[];
+  const noteOwnerData = notSahipleriVerileri as NotSahipleriVerisi;
   const [archiveList, setArchiveList] = useState<ArsivDosyasi[]>(fallbackArchiveList);
 
   const [language, setLanguage] = useState<'tr' | 'en'>('tr');
@@ -802,6 +811,24 @@ export default function Home() {
       )
     );
 
+  const getArchiveNoteOwners = (file: ArsivDosyasi) => {
+    const archivePath = getArchivePath(file);
+    const fileOwners = noteOwnerData.dosyalar?.[archivePath] ?? noteOwnerData.dosyalar?.[file.dosya_adi];
+    return fileOwners?.length ? fileOwners : noteOwnerData.varsayilan ?? [];
+  };
+
+  const getCourseNoteOwners = (archiveItems: ArsivDosyasi[], ders: Ders) => {
+    const owners = Array.from(new Set(archiveItems.flatMap((item) => getArchiveNoteOwners(item)).filter(Boolean)));
+    return owners.length ? owners : ders.not_sahipleri ?? [];
+  };
+
+  const compareArchiveFiles = (left: ArsivDosyasi, right: ArsivDosyasi) =>
+    left.dosya_adi.localeCompare(right.dosya_adi, 'tr', { numeric: true }) ||
+    getArchivePath(left).localeCompare(getArchivePath(right), 'tr', { numeric: true });
+
+  const compareArchiveFolders = (left: ArchiveFolderNode, right: ArchiveFolderNode) =>
+    left.name.localeCompare(right.name, 'tr', { numeric: true });
+
   const courseArchiveMap = useMemo(() => {
     const usableArchiveItems = archiveList.filter((item) => {
       const extension = getFileExtension(item.dosya_adi);
@@ -884,14 +911,15 @@ export default function Home() {
       currentNode.files.push(item);
       return tree;
     }, { name: '', files: [], folders: {} });
-    const rootFiles = archiveTree.files;
-    const rootFolders = Object.values(archiveTree.folders);
+    const rootFiles = [...archiveTree.files].sort(compareArchiveFiles);
+    const rootFolders = Object.values(archiveTree.folders).sort(compareArchiveFolders);
     const renderArchiveFileRow = (file: ArsivDosyasi) => {
       const extension = getFileExtension(file.dosya_adi);
       const url = getArchiveFileUrl(file);
       const previewUrl = getArchivePreviewUrl(file);
       const downloadUrl = getArchiveDownloadUrl(file);
       const archivePath = getArchivePath(file);
+      const noteOwners = getArchiveNoteOwners(file);
 
       return (
         <div
@@ -917,6 +945,11 @@ export default function Home() {
               <p className="mt-1 break-words text-xs opacity-75" style={{ color: textColor }}>
                 {archivePath}
               </p>
+              {noteOwners.length ? (
+                <p className="mt-1 break-words text-xs font-medium opacity-85" style={{ color: textColor }}>
+                  {locale.fileNoteOwners}: {noteOwners.join(', ')}
+                </p>
+              ) : null}
             </div>
           </div>
           <div className="flex shrink-0 gap-2 sm:pl-3">
@@ -945,7 +978,8 @@ export default function Home() {
     const renderArchiveFolderNode = (node: ArchiveFolderNode, parentKey = '', depth = 0): ReactNode => {
       const folderKey = `${ders.id}-${activeYear}-${activeTerm ?? 'all'}-${parentKey}-${node.name}`;
       const isFolderOpen = Boolean(openArchiveFolders[folderKey]);
-      const childFolders = Object.values(node.folders);
+      const childFolders = Object.values(node.folders).sort(compareArchiveFolders);
+      const nodeFiles = [...node.files].sort(compareArchiveFiles);
       const fileCount = countArchiveNodeFiles(node);
 
       return (
@@ -992,8 +1026,8 @@ export default function Home() {
           <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${isFolderOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
             <div className="min-h-0 overflow-hidden">
               <div className="space-y-2 border-t p-3" style={{ borderColor: `${accentColor}50` }}>
-                {node.files.map((file) => renderArchiveFileRow(file))}
                 {childFolders.map((childNode) => renderArchiveFolderNode(childNode, folderKey, depth + 1))}
+                {nodeFiles.map((file) => renderArchiveFileRow(file))}
               </div>
             </div>
           </div>
@@ -1137,13 +1171,13 @@ export default function Home() {
 
             {activeYear ? (
               <div className="space-y-3">
+                {rootFolders.map((folderNode) => renderArchiveFolderNode(folderNode))}
+
                 {rootFiles.length ? (
                   <div className="space-y-2">
                     {rootFiles.map((file) => renderArchiveFileRow(file))}
                   </div>
                 ) : null}
-
-                {rootFolders.map((folderNode) => renderArchiveFolderNode(folderNode))}
               </div>
             ) : (
               <div className="rounded-2xl border border-dashed p-4 text-sm" style={{ borderColor: `${accentColor}80`, color: textColor }}>
@@ -1715,6 +1749,7 @@ export default function Home() {
             const contrastText = getContrastTextColor(accentColor);
             const archiveItems = courseArchiveMap[ders.id] ?? [];
             const courseOfferings = getCourseOfferings(ders);
+            const courseNoteOwners = getCourseNoteOwners(archiveItems, ders);
 
             return (
               <div
@@ -1763,7 +1798,7 @@ export default function Home() {
                   <div className="space-y-2">
                     <h3 className="text-sm font-semibold uppercase tracking-[0.15em]" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>{locale.notesTitle}</h3>
                     <p className="text-sm" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>
-                      {ders.not_sahipleri?.length ? ders.not_sahipleri.join(', ') : locale.noNotesInfo}
+                      {courseNoteOwners.length ? courseNoteOwners.join(', ') : locale.noNotesInfo}
                     </p>
                   </div>
                   <div className="space-y-2">
