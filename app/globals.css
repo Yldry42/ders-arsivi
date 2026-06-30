@@ -105,6 +105,28 @@ html[data-theme="dark"] {
   }
 }
 
+@keyframes gradeChartIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes gradeBarIn {
+  from {
+    transform: scaleY(0);
+    opacity: 0.2;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
 .animate-fade-in-out {
   animation: fadeInOut 300ms ease-in-out;
 }
@@ -133,6 +155,15 @@ html[data-theme="dark"] {
   animation: modalBackdropOut 240ms ease-in both;
 }
 
+.animate-grade-chart {
+  animation: gradeChartIn 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-grade-bar {
+  animation: gradeBarIn 680ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: bottom;
+}
+
 html {
   scrollbar-gutter: stable;
   transition: background-color 300ms ease-in-out, color 300ms ease-in-out;
@@ -153,6 +184,8 @@ html[data-theme="light"] body {
 }
 
 .course-modal-scrollbar {
+  --course-modal-scrollbar-track: rgba(241, 245, 249, 0.86);
+  --course-modal-scrollbar-thumb: rgba(100, 116, 139, 0.78);
   scrollbar-width: thin;
   scrollbar-gutter: auto;
   scrollbar-color: var(--course-modal-scrollbar-thumb) var(--course-modal-scrollbar-track);

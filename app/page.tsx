@@ -25,12 +25,13 @@ type Ders = {
 
 type Degerlendirme = {
   puan: number | null;
-  aciklama: string;
+  aciklama?: string;
 };
 
 type Akademisyen = {
   ad: string;
   fakulte?: string;
+  aciklama?: string;
   notlandirma?: Degerlendirme;
   yoklama_onemi?: Degerlendirme;
   ders_anlatimi?: Degerlendirme;
@@ -61,10 +62,17 @@ type ArchiveFolderNode = {
 
 type HarfNotuDagilimi = {
   baslik?: string;
-  dagilim: Record<string, number>;
+  ders_kodu?: string;
+  ders_adi?: string;
+  akademisyen?: string;
+  yil?: string;
+  donem?: string;
+  etiket?: string;
+  dagilim: Record<string, number | null>;
 };
 
 type NotDagilimlariVerisi = {
+  dagilimlar?: HarfNotuDagilimi[];
   dersler?: Record<string, HarfNotuDagilimi[]>;
   akademisyenler?: Record<string, HarfNotuDagilimi[]>;
 };
@@ -194,7 +202,8 @@ const translate = {
     instructorCourses: 'ders',
     instructorDetail: 'Akademisyen Detayı',
     facultyLabel: 'Fakülte',
-    defaultFaculty: 'İTÜ Uçak ve Uzay Bilimleri Fakültesi',
+    defaultFaculty: 'Uçak ve Uzay Bilimleri',
+    commonFaculty: 'Fen-Edebiyat Fakültesi',
     grading: 'Notlandırma',
     attendance: 'Yoklama Önemi',
     teaching: 'Ders Anlatımı',
@@ -268,7 +277,8 @@ const translate = {
     instructorCourses: 'courses',
     instructorDetail: 'Instructor Detail',
     facultyLabel: 'Faculty',
-    defaultFaculty: 'ITU Faculty of Aeronautics and Astronautics',
+    defaultFaculty: 'Uçak ve Uzay Bilimleri',
+    commonFaculty: 'Fen-Edebiyat Fakültesi',
     grading: 'Grading',
     attendance: 'Attendance Importance',
     teaching: 'Teaching',
@@ -558,10 +568,15 @@ export default function Home() {
   const [selectedMenuCourseCode, setSelectedMenuCourseCode] = useState('');
   const [selectedMenuCourseNo, setSelectedMenuCourseNo] = useState('');
   const [selectedAcademicName, setSelectedAcademicName] = useState<string | null>(null);
+  const [selectedAcademicGradeCourse, setSelectedAcademicGradeCourse] = useState('');
+  const [selectedAcademicGradePeriod, setSelectedAcademicGradePeriod] = useState('');
   const [isAcademicModalClosing, setIsAcademicModalClosing] = useState(false);
   const [selectedNoteOwnerName, setSelectedNoteOwnerName] = useState<string | null>(null);
   const [isNoteOwnerModalClosing, setIsNoteOwnerModalClosing] = useState(false);
   const [selectedDersId, setSelectedDersId] = useState<number | null>(null);
+  const [selectedCourseGradeInstructor, setSelectedCourseGradeInstructor] = useState('');
+  const [selectedCourseGradePeriod, setSelectedCourseGradePeriod] = useState('');
+  const [gradeAnimationSeed, setGradeAnimationSeed] = useState(0);
   const [modalRect, setModalRect] = useState<DOMRect | null>(null);
   const [modalStyle, setModalStyle] = useState<Record<string, string | number> | null>(null);
   const [isClosing, setIsClosing] = useState(false);
@@ -669,12 +684,20 @@ export default function Home() {
     setSelectedArchiveTerm(null);
     setOpenArchiveFolders({});
     setArchivePreview(null);
+    setSelectedCourseGradeInstructor('');
+    setSelectedCourseGradePeriod('');
+    setGradeAnimationSeed((seed) => seed + 1);
   }, [selectedDersId]);
 
   useEffect(() => {
     setArchivePreviewZoom(100);
     setIsArchivePreviewClosing(false);
   }, [archivePreview]);
+
+  useEffect(() => {
+    setSelectedAcademicGradeCourse('');
+    setSelectedAcademicGradePeriod('');
+  }, [selectedAcademicName]);
 
   const closeMenuModal = () => {
     setIsMenuModalClosing(true);
@@ -766,14 +789,17 @@ export default function Home() {
     if (!academic) return null;
 
     const defaults = akademisyenVerileri.varsayilan_degerlendirme;
+    const academicCourses = dersList
+      .filter((ders) => normalizeInstructors(ders.ogretim_uyesi).includes(academic.ad))
+      .sort(compareCourseChronology);
+
     return {
       ...academic,
       notlandirma: academic.notlandirma ?? defaults.notlandirma,
       yoklama_onemi: academic.yoklama_onemi ?? defaults.yoklama_onemi,
       ders_anlatimi: academic.ders_anlatimi ?? defaults.ders_anlatimi,
-      dersler: dersList
-        .filter((ders) => normalizeInstructors(ders.ogretim_uyesi).includes(academic.ad))
-        .sort(compareCourseChronology),
+      dersler: academicCourses,
+      hasCommonCourse: academicCourses.some((ders) => ders.kategori === 'Havuz Dersleri'),
     };
   }, [dersList, selectedAcademicName]);
 
@@ -908,7 +934,7 @@ export default function Home() {
       <article
         key={ders.id}
         onClick={(event) => openModal(event, ders.id)}
-        className="flex h-48 w-full min-w-0 flex-col overflow-hidden rounded-3xl border p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg cursor-pointer dark:border-slate-700"
+        className="flex h-48 w-full min-w-0 transform-gpu flex-col overflow-hidden rounded-3xl border p-5 shadow-sm transition [contain-intrinsic-size:20rem] [content-visibility:auto] hover:-translate-y-1 hover:shadow-lg cursor-pointer dark:border-slate-700"
         style={{ borderColor: accentColor, backgroundColor: getCardBackground(accentColor) }}
       >
         <div className="flex items-start justify-between gap-3">
@@ -1008,14 +1034,25 @@ export default function Home() {
       const extension = getFileExtension(item.dosya_adi);
       return item.dosya_adi.toLowerCase() !== 'desktop.ini' && extension !== 'ini';
     });
+    const archiveItemsByToken = usableArchiveItems.reduce<Record<string, ArsivDosyasi[]>>((map, item) => {
+      const uniqueTokens = new Set(getArchivePath(item).split(/[\\/]/).filter(Boolean).map(normalizeArchiveToken));
+      uniqueTokens.forEach((token) => {
+        if (!map[token]) map[token] = [];
+        map[token].push(item);
+      });
+      return map;
+    }, {});
 
     return dersList.reduce<Record<number, ArsivDosyasi[]>>((map, ders) => {
       const courseKeys = new Set(getArchiveKeysForCourse(ders));
+      const matchedItems = new Map<string, ArsivDosyasi>();
 
-      map[ders.id] = usableArchiveItems.filter((item) => {
-        const pathSegments = getArchivePath(item).split(/[\\/]/).filter(Boolean);
-        return pathSegments.some((segment) => courseKeys.has(normalizeArchiveToken(segment)));
+      courseKeys.forEach((key) => {
+        archiveItemsByToken[key]?.forEach((item) => {
+          matchedItems.set(getArchivePath(item), item);
+        });
       });
+      map[ders.id] = Array.from(matchedItems.values());
 
       if (debugArchiveMatches && map[ders.id].length === 0) {
         console.warn('[Ders Arşivi] Arşiv eşleşmesi bulunamadı:', {
@@ -1056,63 +1093,120 @@ export default function Home() {
       .map((part) => part[0]?.toLocaleUpperCase('tr'))
       .join('');
 
-  const getGradeDistributionEntries = (source: Record<string, HarfNotuDagilimi[]> | undefined, keys: string[]) => {
-    if (!source) return [];
-    const normalizedKeys = new Set(keys.map(normalizeArchiveToken));
-    const match = Object.entries(source).find(([key]) => normalizedKeys.has(normalizeArchiveToken(key)));
-    return match?.[1] ?? [];
+  const hasGradeDistributionValues = (entry: HarfNotuDagilimi) =>
+    Object.values(entry.dagilim ?? {}).some((value) => typeof value === 'number');
+
+  const allGradeDistributions = useMemo(() => {
+    if (gradeDistributionData.dagilimlar?.length) return gradeDistributionData.dagilimlar;
+
+    const legacyCourseEntries = Object.entries(gradeDistributionData.dersler ?? {}).flatMap(([courseCode, entries]) =>
+      entries.map((entry) => ({ ...entry, ders_kodu: entry.ders_kodu ?? courseCode }))
+    );
+    const legacyAcademicEntries = Object.entries(gradeDistributionData.akademisyenler ?? {}).flatMap(([academicName, entries]) =>
+      entries.map((entry) => ({ ...entry, akademisyen: entry.akademisyen ?? academicName }))
+    );
+
+    return [...legacyCourseEntries, ...legacyAcademicEntries];
+  }, []);
+
+  const getGradeDistributionEntries = (predicate: (entry: HarfNotuDagilimi) => boolean) => {
+    return allGradeDistributions.filter(predicate).filter(hasGradeDistributionValues);
   };
 
-  const getCourseGradeDistributions = (course: Ders) =>
-    getGradeDistributionEntries(gradeDistributionData.dersler, [
+  const getCourseGradeDistributions = (course: Ders) => {
+    const normalizedKeys = new Set([
       `${course.kod}${course.no}`,
       `${course.kod}${getDisplayNo(course)}`,
       `${course.kod} ${course.no}`,
       `${course.kod} ${getDisplayNo(course)}`,
-    ]);
+    ].map(normalizeArchiveToken));
+
+    return getGradeDistributionEntries((entry) => Boolean(entry.ders_kodu && normalizedKeys.has(normalizeArchiveToken(entry.ders_kodu))));
+  };
 
   const getAcademicGradeDistributions = (academicName: string) =>
-    getGradeDistributionEntries(gradeDistributionData.akademisyenler, [academicName]);
+    getGradeDistributionEntries((entry) => Boolean(entry.akademisyen && normalizeArchiveToken(entry.akademisyen) === normalizeArchiveToken(academicName)));
 
-  const renderGradeDistributions = (entries: HarfNotuDagilimi[], accentColor = '#64748b', variant: 'tinted' | 'plain' = 'tinted') => {
+  const renderGradeDistributions = (entries: HarfNotuDagilimi[], accentColor = '#64748b', variant: 'tinted' | 'plain' = 'tinted', animationKey = '') => {
     if (!entries.length) return null;
-    const gradeOrder = ['AA', 'BA+', 'BA', 'BB+', 'BB', 'CB+', 'CB', 'CC+', 'CC', 'DC+', 'DC', 'DD+', 'DD', 'FD', 'FF', 'VF'];
+    const gradeOrder = ['AA', 'BA+', 'BA', 'BB+', 'BB', 'CB+', 'CB', 'CC+', 'CC', 'DC+', 'DC', 'DD+', 'DD', 'FF', 'VF'];
 
     return (
       <div className="space-y-4">
         {entries.map((entry, index) => {
-          const labels = Array.from(new Set([...gradeOrder, ...Object.keys(entry.dagilim)])).filter((label) => entry.dagilim[label] !== undefined);
-          const maxCount = Math.max(...labels.map((label) => entry.dagilim[label] ?? 0), 1);
+          const labels = Array.from(new Set([...gradeOrder, ...Object.keys(entry.dagilim)])).filter((label) => typeof entry.dagilim[label] === 'number');
+          const maxCount = Math.max(...labels.map((label) => Number(entry.dagilim[label] ?? 0)), 1);
+          const totalCount = labels.reduce((total, label) => total + Number(entry.dagilim[label] ?? 0), 0);
+          const title = entry.baslik ?? [entry.ders_kodu, entry.ders_adi].filter(Boolean).join(' · ');
+          const metaParts = [entry.yil, entry.donem].filter(Boolean);
+          if (entry.etiket && normalizeArchiveToken(entry.etiket) !== normalizeArchiveToken(entry.donem ?? '')) {
+            metaParts.push(entry.etiket);
+          }
+          const meta = metaParts.join(' · ');
+
+          const entryCourse = dersList.find((course) => entry.ders_kodu && normalizeArchiveToken(`${course.kod}${course.no}`) === normalizeArchiveToken(entry.ders_kodu));
+          const chartColor = entryCourse?.renk_kodu ?? accentColor;
 
           return (
             <article
-              key={`${entry.baslik ?? 'distribution'}-${index}`}
-              className={`rounded-2xl border p-4 ${
+              key={`${animationKey}-${title || 'distribution'}-${meta}-${index}`}
+              className={`animate-grade-chart rounded-3xl border p-4 shadow-sm ${
                 variant === 'plain'
-                  ? 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-950'
+                  ? 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950'
                   : 'border-white/30 bg-white/15'
               }`}
             >
-              {entry.baslik ? (
-                <p className="mb-3 text-sm font-semibold">
-                  {entry.baslik}
-                </p>
-              ) : null}
-              <div className="space-y-2">
-                {labels.map((label) => {
-                  const count = entry.dagilim[label] ?? 0;
-                  const percentage = Math.max(4, (count / maxCount) * 100);
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                {title || meta ? (
+                  <div className="min-w-0">
+                    {title ? (
+                      <p className="text-sm font-semibold leading-6">
+                        {title}
+                      </p>
+                    ) : null}
+                    {meta ? (
+                      <p className="mt-0.5 text-xs font-semibold uppercase tracking-[0.14em] opacity-70">
+                        {meta}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+                <span
+                  className={`inline-flex w-fit shrink-0 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] ${
+                    variant === 'plain'
+                      ? 'bg-slate-100 text-slate-600 dark:bg-slate-900 dark:text-slate-300'
+                      : 'bg-white/20'
+                  }`}
+                >
+                  {totalCount} {language === 'tr' ? 'öğrenci' : 'students'}
+                </span>
+              </div>
+              <div className="mt-5 grid grid-cols-5 gap-2 sm:grid-cols-8 lg:grid-cols-[repeat(15,minmax(0,1fr))]">
+                {labels.map((label, labelIndex) => {
+                  const count = Number(entry.dagilim[label] ?? 0);
+                  const percentage = (count / maxCount) * 100;
+                  const totalPercentage = totalCount ? (count / totalCount) * 100 : 0;
+                  const height = Math.max(10, percentage);
 
                   return (
-                    <div key={label} className="grid grid-cols-[2.25rem_minmax(0,1fr)_3rem] items-center gap-2 text-xs">
-                      <span className="font-bold tracking-wide">{label}</span>
-                      <div className={`h-2.5 overflow-hidden rounded-full ${variant === 'plain' ? 'bg-slate-200 dark:bg-slate-800' : 'bg-white/30'}`}>
+                    <div key={`${animationKey}-${title}-${meta}-${label}`} className="flex min-w-0 flex-col items-center gap-1.5 text-[11px]">
+                      <div
+                        className="flex h-20 w-full max-w-11 items-end overflow-hidden rounded-2xl p-1"
+                        style={{ backgroundColor: `${chartColor}22` }}
+                        title={`${label}: ${count} (${totalPercentage.toFixed(1)}%)`}
+                      >
                         <div
-                          className="h-full rounded-full"
-                          style={{ width: `${percentage}%`, backgroundColor: accentColor }}
+                          className="animate-grade-bar w-full rounded-xl shadow-sm transition-all duration-300"
+                          style={{
+                            height: `${height}%`,
+                            backgroundColor: `${chartColor}cc`,
+                            animationDelay: `${Math.min(labelIndex * 28, 280)}ms`,
+                          }}
                         />
                       </div>
-                      <span className="text-right font-semibold tabular-nums">{count}</span>
+                      <span className="font-black tracking-wide">{label}</span>
+                      <span className="font-bold tabular-nums leading-none">{count}</span>
+                      <span className="text-[10px] font-semibold leading-none opacity-70">{totalPercentage.toFixed(1)}%</span>
                     </div>
                   );
                 })}
@@ -1636,7 +1730,7 @@ export default function Home() {
 
                 {menuOpen ? (
                   <div
-                    className={`absolute right-0 top-14 z-40 w-64 rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-700 dark:bg-slate-900 ${
+                    className={`absolute right-0 top-14 z-40 w-64 transform-gpu rounded-3xl border border-slate-200 bg-white p-4 shadow-xl [contain:layout_paint] dark:border-slate-700 dark:bg-slate-900 ${
                       isMenuDropdownClosing ? 'animate-section-modal-out' : 'animate-section-modal'
                     }`}
                   >
@@ -1882,23 +1976,29 @@ export default function Home() {
           onClick={closeAcademicModal}
         >
           <section
-            className={`max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-slate-200 bg-white/90 shadow-2xl backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/90 ${
+            className={`flex max-h-[90vh] w-full max-w-3xl transform-gpu flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-xl backdrop-blur-md [contain:layout_paint] dark:border-slate-700 dark:bg-slate-900/95 ${
               isAcademicModalClosing ? 'animate-section-modal-out' : 'animate-section-modal'
             }`}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="relative border-b border-slate-200 p-6 dark:border-slate-700">
+            <div className="relative shrink-0 border-b border-slate-200 p-6 dark:border-slate-700">
               <FloatingCloseButton label={locale.close} onClick={closeAcademicModal} />
               <div className="pr-14">
                 <h2 className="text-3xl font-semibold text-slate-900 dark:text-white">
                   {selectedAcademic.ad}
                 </h2>
                 <p className="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">
-                  {locale.facultyLabel}: {selectedAcademic.fakulte ?? locale.defaultFaculty}
+                  {locale.facultyLabel}: {selectedAcademic.hasCommonCourse ? locale.commonFaculty : selectedAcademic.fakulte ?? locale.defaultFaculty}
                 </p>
+                {selectedAcademic.aciklama ? (
+                  <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+                    {selectedAcademic.aciklama}
+                  </p>
+                ) : null}
               </div>
             </div>
 
+            <div className="course-modal-scrollbar min-h-0 flex-1 overflow-y-auto">
             <div className="p-6">
               <p className="max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
                 {locale.academicRatingIntro}
@@ -1908,7 +2008,9 @@ export default function Home() {
                   { label: locale.grading, data: selectedAcademic.notlandirma },
                   { label: locale.attendance, data: selectedAcademic.yoklama_onemi },
                   { label: locale.teaching, data: selectedAcademic.ders_anlatimi },
-                ].map(({ label, data }) => (
+                ]
+                  .filter(({ label }) => !(selectedAcademic.hasCommonCourse && label === locale.grading))
+                  .map(({ label, data }) => (
                   <article key={label} className="rounded-3xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-950">
                     <h3 className="font-semibold text-slate-900 dark:text-white">{label}</h3>
                     <div className="mt-3 flex items-center gap-1" aria-label={data.puan === null ? locale.notRated : `${data.puan} / 5`}>
@@ -1931,11 +2033,76 @@ export default function Home() {
 
             {(() => {
               const academicGradeDistributions = getAcademicGradeDistributions(selectedAcademic.ad);
+              const academicGradeCourseOptions = Array.from(new Set(academicGradeDistributions.map((entry) => entry.ders_kodu).filter(Boolean))) as string[];
+              const activeGradeCourse =
+                selectedAcademicGradeCourse && academicGradeCourseOptions.includes(selectedAcademicGradeCourse)
+                  ? selectedAcademicGradeCourse
+                  : academicGradeCourseOptions[0] ?? '';
+              const courseFilteredDistributions = activeGradeCourse
+                ? academicGradeDistributions.filter((entry) => entry.ders_kodu === activeGradeCourse)
+                : academicGradeDistributions;
+              const periodOptions = courseFilteredDistributions.map((entry) => ({
+                key: [entry.yil, entry.donem, entry.etiket].filter(Boolean).join('||'),
+                label: [
+                  entry.yil,
+                  entry.donem,
+                  entry.etiket && normalizeArchiveToken(entry.etiket) !== normalizeArchiveToken(entry.donem ?? '') ? entry.etiket : null,
+                ].filter(Boolean).join(' · '),
+              }));
+              const activeGradePeriod =
+                selectedAcademicGradePeriod && periodOptions.some((period) => period.key === selectedAcademicGradePeriod)
+                  ? selectedAcademicGradePeriod
+                  : periodOptions[0]?.key ?? '';
+              const visibleAcademicGradeDistributions = activeGradePeriod
+                ? courseFilteredDistributions.filter((entry) => [entry.yil, entry.donem, entry.etiket].filter(Boolean).join('||') === activeGradePeriod)
+                : courseFilteredDistributions;
+
               return academicGradeDistributions.length ? (
                 <div className="border-t border-slate-200 p-6 dark:border-slate-700">
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{locale.gradeDistributionTitle}</h3>
-                  <div className="mt-4">
-                    {renderGradeDistributions(academicGradeDistributions, '#f59e0b', 'plain')}
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <label className="block">
+                      <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                        {locale.courseCodeLabel}
+                      </span>
+                      <select
+                        value={activeGradeCourse}
+                        onChange={(event) => {
+                          setSelectedAcademicGradeCourse(event.target.value);
+                          setSelectedAcademicGradePeriod('');
+                          setGradeAnimationSeed((seed) => seed + 1);
+                        }}
+                        className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:ring-2 focus:ring-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                      >
+                        {academicGradeCourseOptions.map((courseCode) => (
+                          <option key={courseCode} value={courseCode}>
+                            {courseCode}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="block">
+                      <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                        {locale.termLabel}
+                      </span>
+                      <select
+                        value={activeGradePeriod}
+                        onChange={(event) => {
+                          setSelectedAcademicGradePeriod(event.target.value);
+                          setGradeAnimationSeed((seed) => seed + 1);
+                        }}
+                        className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:ring-2 focus:ring-slate-300 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                      >
+                        {periodOptions.map((period) => (
+                          <option key={period.key} value={period.key}>
+                            {period.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                  <div key={`academic-grade-${activeGradeCourse}-${activeGradePeriod}`} className="mt-4">
+                    {renderGradeDistributions(visibleAcademicGradeDistributions, '#64748b', 'plain', `academic-${activeGradeCourse}-${activeGradePeriod}-${gradeAnimationSeed}`)}
                   </div>
                 </div>
               ) : null;
@@ -1981,6 +2148,7 @@ export default function Home() {
                 ))}
               </div>
             </div>
+            </div>
           </section>
         </div>
       ) : null}
@@ -1993,12 +2161,12 @@ export default function Home() {
           onClick={closeNoteOwnerModal}
         >
           <section
-            className={`max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-slate-200 bg-white/90 shadow-2xl backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/90 ${
+            className={`flex max-h-[90vh] w-full max-w-3xl transform-gpu flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-xl backdrop-blur-md [contain:layout_paint] dark:border-slate-700 dark:bg-slate-900/95 ${
               isNoteOwnerModalClosing ? 'animate-section-modal-out' : 'animate-section-modal'
             }`}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="relative border-b border-slate-200 p-6 dark:border-slate-700">
+            <div className="relative shrink-0 border-b border-slate-200 p-6 dark:border-slate-700">
               <FloatingCloseButton label={locale.close} onClick={closeNoteOwnerModal} />
               <div className="pr-14">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
@@ -2015,6 +2183,7 @@ export default function Home() {
               </div>
             </div>
 
+            <div className="course-modal-scrollbar min-h-0 flex-1 overflow-y-auto">
             <div className="p-6">
               <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem]">
                 <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-950">
@@ -2084,6 +2253,7 @@ export default function Home() {
                 })}
               </div>
             </div>
+            </div>
           </section>
         </div>
       ) : null}
@@ -2096,7 +2266,7 @@ export default function Home() {
           onClick={closeMenuModal}
         >
           <section
-            className={`w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-2xl backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/90 ${
+            className={`w-full max-w-2xl transform-gpu overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-xl backdrop-blur-md [contain:layout_paint] dark:border-slate-700 dark:bg-slate-900/95 ${
               isMenuModalClosing ? 'animate-section-modal-out' : 'animate-section-modal'
             }`}
             onClick={(event) => event.stopPropagation()}
@@ -2109,7 +2279,7 @@ export default function Home() {
                 </h2>
               </div>
             </div>
-            <div className="max-h-[70vh] overflow-y-auto p-6">
+            <div className="course-modal-scrollbar max-h-[70vh] overflow-y-auto p-6">
               {selectedMenuIndex === 0 ? (
                 <div>
                   <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-slate-300">
@@ -2229,7 +2399,7 @@ export default function Home() {
 
             return (
               <div
-                className="absolute overflow-hidden rounded-3xl bg-white dark:bg-slate-900 shadow-2xl"
+                className="absolute transform-gpu overflow-hidden rounded-3xl bg-white shadow-xl [contain:layout_paint] dark:bg-slate-900"
                 onClick={(event) => event.stopPropagation()}
                 onTransitionEnd={onModalTransitionEnd}
                 style={{
@@ -2298,7 +2468,88 @@ export default function Home() {
                   {courseGradeDistributions.length ? (
                     <div className="space-y-3 border-t pt-6" style={{ borderColor: `${accentColor}80` }}>
                       <h3 className="text-sm font-semibold uppercase tracking-[0.15em]" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>{locale.gradeDistributionTitle}</h3>
-                      {renderGradeDistributions(courseGradeDistributions, accentColor)}
+                      {(() => {
+                        const instructorOptions = Array.from(new Set(courseGradeDistributions.map((entry) => entry.akademisyen).filter(Boolean))) as string[];
+                        const activeInstructor =
+                          selectedCourseGradeInstructor && instructorOptions.includes(selectedCourseGradeInstructor)
+                            ? selectedCourseGradeInstructor
+                            : instructorOptions[0] ?? '';
+                        const instructorFilteredDistributions = activeInstructor
+                          ? courseGradeDistributions.filter((entry) => entry.akademisyen === activeInstructor)
+                          : courseGradeDistributions;
+                        const periodOptions = instructorFilteredDistributions.map((entry) => ({
+                          key: [entry.yil, entry.donem, entry.etiket].filter(Boolean).join('||'),
+                          label: [
+                            entry.yil,
+                            entry.donem,
+                            entry.etiket && normalizeArchiveToken(entry.etiket) !== normalizeArchiveToken(entry.donem ?? '') ? entry.etiket : null,
+                          ].filter(Boolean).join(' · '),
+                        }));
+                        const activePeriod =
+                          selectedCourseGradePeriod && periodOptions.some((period) => period.key === selectedCourseGradePeriod)
+                            ? selectedCourseGradePeriod
+                            : periodOptions[0]?.key ?? '';
+                        const visibleCourseGradeDistributions = activePeriod
+                          ? instructorFilteredDistributions.filter((entry) => [entry.yil, entry.donem, entry.etiket].filter(Boolean).join('||') === activePeriod)
+                          : instructorFilteredDistributions;
+
+                        return (
+                          <div className="space-y-4">
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <label className="block">
+                                <span className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>
+                                  {locale.instructorSingular}
+                                </span>
+                                <select
+                                  value={activeInstructor}
+                                  onChange={(event) => {
+                                    setSelectedCourseGradeInstructor(event.target.value);
+                                    setSelectedCourseGradePeriod('');
+                                    setGradeAnimationSeed((seed) => seed + 1);
+                                  }}
+                                  className="mt-2 w-full rounded-2xl border bg-white/55 px-4 py-3 text-sm font-semibold shadow-sm outline-none transition focus:ring-2 dark:bg-slate-950/40"
+                                  style={{
+                                    borderColor: `${accentColor}80`,
+                                    color: getContrastTextColor(lightenHex(accentColor, 0.7)),
+                                  }}
+                                >
+                                  {instructorOptions.map((instructor) => (
+                                    <option key={instructor} value={instructor}>
+                                      {instructor}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                              <label className="block">
+                                <span className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>
+                                  {locale.termLabel}
+                                </span>
+                                <select
+                                  value={activePeriod}
+                                  onChange={(event) => {
+                                    setSelectedCourseGradePeriod(event.target.value);
+                                    setGradeAnimationSeed((seed) => seed + 1);
+                                  }}
+                                  className="mt-2 w-full rounded-2xl border bg-white/55 px-4 py-3 text-sm font-semibold shadow-sm outline-none transition focus:ring-2 dark:bg-slate-950/40"
+                                  style={{
+                                    borderColor: `${accentColor}80`,
+                                    color: getContrastTextColor(lightenHex(accentColor, 0.7)),
+                                  }}
+                                >
+                                  {periodOptions.map((period) => (
+                                    <option key={period.key} value={period.key}>
+                                      {period.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                            </div>
+                            <div key={`course-grade-${activeInstructor}-${activePeriod}`}>
+                              {renderGradeDistributions(visibleCourseGradeDistributions, accentColor, 'tinted', `course-${activeInstructor}-${activePeriod}-${gradeAnimationSeed}`)}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   ) : null}
                   <div className="border-t pt-6" style={{ borderColor: `${accentColor}80` }}>
@@ -2357,7 +2608,7 @@ export default function Home() {
           onClick={closeArchivePreview}
         >
           <section
-            className={`flex max-h-[94vh] w-full max-w-[min(96vw,86rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-2xl backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/95 ${
+            className={`flex max-h-[94vh] w-full max-w-[min(96vw,86rem)] transform-gpu flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-xl backdrop-blur-md [contain:layout_paint] dark:border-slate-700 dark:bg-slate-900/95 ${
               isArchivePreviewClosing ? 'animate-section-modal-out' : 'animate-section-modal'
             }`}
             onClick={(event) => event.stopPropagation()}
