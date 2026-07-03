@@ -13,15 +13,15 @@
   "akademisyenler": [
     {
       "ad": "Alim Rüstem Aslan",
-      "aciklama": "",
+      "aciklama": "Alim hoca uzay mühendisliği bölümünün hakkını veren ve bölümün en önemli hocalarından birisidir. Uzay, uydu ve iletişim konularında oldukça bilgili ve tecrübeli bir akademisyendir. Ayrıca, öğrencilerin projelerine ve araştırmalarına destek olmaktan çekinmez.",
       "notlandirma": {
-        "puan": null
+        "puan": 4
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 4
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 4
       }
     },
     {
@@ -44,205 +44,205 @@
         "puan": null
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 5
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 4
       }
     },
     {
       "ad": "Ayşe Gül Güngör",
       "aciklama": "",
       "notlandirma": {
-        "puan": null
+        "puan": 3.5
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 5
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 5
       }
     },
     {
       "ad": "Ayşe Zeynep Akalın Özdemir",
       "aciklama": "",
       "notlandirma": {
-        "puan": null
+        "puan": 4.5
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 2
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 4.5
       }
     },
     {
       "ad": "Aytaç Arıkoğlu",
       "aciklama": "",
       "notlandirma": {
-        "puan": null
+        "puan": 3
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 3
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 3.5
       }
     },
     {
       "ad": "Bayram Çelik",
       "aciklama": "",
       "notlandirma": {
-        "puan": null
+        "puan": 3.5
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 2.5
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 5
       }
     },
     {
       "ad": "Bülent Tutkun",
       "aciklama": "",
       "notlandirma": {
-        "puan": null
+        "puan": 2.5
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 3
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 3.5
       }
     },
     {
       "ad": "Canan Sağbilge",
       "aciklama": "",
       "notlandirma": {
-        "puan": null
+        "puan": 5
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 5
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 5
       }
     },
     {
       "ad": "Cuma Yarım",
       "aciklama": "",
       "notlandirma": {
-        "puan": null
+        "puan": 2.5
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 3.5
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 3.5
       }
     },
     {
       "ad": "Çiğdem Özkan Aygün",
       "aciklama": "",
       "notlandirma": {
-        "puan": null
+        "puan": 5
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 4
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 4.5
       }
     },
     {
       "ad": "Demet Balkan",
       "aciklama": "",
       "notlandirma": {
-        "puan": null
+        "puan": 4
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 3.5
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 3
       }
     },
     {
       "ad": "Demet Çilden Güler",
       "aciklama": "",
       "notlandirma": {
-        "puan": null
+        "puan": 2.5
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 3
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 4
       }
     },
     {
       "ad": "Duygu Erdem",
       "aciklama": "",
       "notlandirma": {
-        "puan": null
+        "puan": 3
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 5
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 4
       }
     },
     {
       "ad": "Egnar Özdikililer",
       "aciklama": "",
       "notlandirma": {
-        "puan": null
+        "puan": 3
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 3
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 3
       }
     },
     {
       "ad": "Emre Koyuncu",
       "aciklama": "",
       "notlandirma": {
-        "puan": null
+        "puan": 3
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 5
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 3.5
       }
     },
     {
       "ad": "Erdem Onur Özyurt",
       "aciklama": "",
       "notlandirma": {
-        "puan": null
+        "puan": 3
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 4
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 2
       }
     },
     {
       "ad": "Fırat Oğuz Edis",
       "aciklama": "",
       "notlandirma": {
-        "puan": null
+        "puan": 4
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 5
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 5
       }
     },
     {
@@ -252,10 +252,10 @@
         "puan": null
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 2
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 4
       }
     },
     {
@@ -265,36 +265,36 @@
         "puan": null
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 5
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 4
       }
     },
     {
       "ad": "Hülya Cebeci",
       "aciklama": "",
       "notlandirma": {
-        "puan": null
+        "puan": 3
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 3
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 4.5
       }
     },
     {
       "ad": "Hüsnü Barbaros Soyer",
       "aciklama": "",
       "notlandirma": {
-        "puan": null
+        "puan": 2.5
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 4
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 3.5
       }
     },
     {
@@ -304,23 +304,23 @@
         "puan": null
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 5
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 5
       }
     },
     {
       "ad": "Mehmet Murat Sunar",
       "aciklama": "",
       "notlandirma": {
-        "puan": null
+        "puan": 5
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 5
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 4
       }
     },
     {
@@ -366,13 +366,13 @@
       "ad": "Okşan Çetiner",
       "aciklama": "",
       "notlandirma": {
-        "puan": null
+        "puan": 4.5
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 3.5
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 5
       }
     },
     {
@@ -405,13 +405,13 @@
       "ad": "Sait Kofoğlu",
       "aciklama": "",
       "notlandirma": {
-        "puan": null
+        "puan": 3.5
       },
       "yoklama_onemi": {
-        "puan": null
+        "puan": 2
       },
       "ders_anlatimi": {
-        "puan": null
+        "puan": 4
       }
     },
     {

@@ -2000,10 +2000,7 @@ export default function Home() {
 
             <div className="course-modal-scrollbar min-h-0 flex-1 overflow-y-auto">
             <div className="p-6">
-              <p className="max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
-                {locale.academicRatingIntro}
-              </p>
-              <div className="mt-4 grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-3">
                 {[
                   { label: locale.grading, data: selectedAcademic.notlandirma },
                   { label: locale.attendance, data: selectedAcademic.yoklama_onemi },
@@ -2014,14 +2011,24 @@ export default function Home() {
                   <article key={label} className="rounded-3xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-950">
                     <h3 className="font-semibold text-slate-900 dark:text-white">{label}</h3>
                     <div className="mt-3 flex items-center gap-1" aria-label={data.puan === null ? locale.notRated : `${data.puan} / 5`}>
-                      {[1, 2, 3, 4, 5].map((point) => (
-                        <span
-                          key={point}
-                          className={`h-3 w-3 rounded-full ${
-                            data.puan !== null && point <= data.puan ? 'bg-amber-400' : 'bg-slate-200 dark:bg-slate-700'
-                          }`}
-                        />
-                      ))}
+                      {[1, 2, 3, 4, 5].map((point) => {
+                        const fillPercentage =
+                          data.puan === null
+                            ? 0
+                            : Math.max(0, Math.min(1, data.puan - (point - 1))) * 100;
+
+                        return (
+                          <span
+                            key={point}
+                            className="relative h-3 w-3 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700"
+                          >
+                            <span
+                              className="absolute inset-y-0 left-0 rounded-full bg-amber-400"
+                              style={{ width: `${fillPercentage}%` }}
+                            />
+                          </span>
+                        );
+                      })}
                       <span className="ml-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
                         {data.puan === null ? '— / 5' : `${data.puan} / 5`}
                       </span>
