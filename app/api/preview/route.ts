@@ -8,6 +8,10 @@ const getSafeFileName = (fileName: string) =>
     .replace(/\s+/g, ' ')
     .trim() || 'dosya';
 
+const textPreviewExtensions = new Set(['txt', 'md', 'csv', 'm', 'c', 'h', 'cpp', 'hpp', 'cc', 'py', 'js', 'jsx', 'ts', 'tsx', 'java', 'cs', 'json', 'xml', 'html', 'css']);
+
+const getFileExtension = (fileName: string) => fileName.split('.').pop()?.toLowerCase() ?? '';
+
 export async function GET(request: NextRequest) {
   const source = request.nextUrl.searchParams.get('url');
   const name = getSafeFileName(request.nextUrl.searchParams.get('name') ?? 'dosya');
@@ -40,7 +44,7 @@ export async function GET(request: NextRequest) {
   return new Response(upstream.body, {
     headers: {
       'Content-Disposition': `inline; filename="${name.replace(/"/g, '')}"; filename*=UTF-8''${encodeURIComponent(name)}`,
-      'Content-Type': upstream.headers.get('Content-Type') ?? 'application/octet-stream',
+      'Content-Type': textPreviewExtensions.has(getFileExtension(name)) ? 'text/plain; charset=utf-8' : upstream.headers.get('Content-Type') ?? 'application/octet-stream',
       'Cache-Control': 'public, max-age=3600',
     },
   });

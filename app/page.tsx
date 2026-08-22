@@ -438,9 +438,9 @@ const getFileExtension = (fileName: string) => {
 };
 
 const pdfPreviewExtensions = ['pdf'];
-const textPreviewExtensions = ['txt', 'md', 'csv'];
+const textPreviewExtensions = ['txt', 'md', 'csv', 'm', 'c', 'h', 'cpp', 'hpp', 'cc', 'py', 'js', 'jsx', 'ts', 'tsx', 'java', 'cs', 'json', 'xml', 'html', 'css'];
 const imagePreviewExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'];
-const officePreviewExtensions = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+const documentPreviewExtensions = ['doc', 'docx', 'ppt', 'pptx', 'xlsx'];
 
 const getPdfPreviewSource = (previewUrl: string, zoom: number, searchQuery: string) => {
   const params = [`toolbar=0`, `navpanes=0`, `zoom=${zoom}`];
@@ -449,11 +449,8 @@ const getPdfPreviewSource = (previewUrl: string, zoom: number, searchQuery: stri
   return `${previewUrl}#${params.join('&')}`;
 };
 
-const getOfficePreviewSource = (previewUrl: string) => {
-  if (typeof window === 'undefined') return '';
-  const absolutePreviewUrl = new URL(previewUrl, window.location.origin).toString();
-  return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(absolutePreviewUrl)}`;
-};
+const getDocumentPreviewSource = (fileUrl: string, fileName: string, zoom: number, searchQuery: string) =>
+  `/api/document-preview?url=${encodeURIComponent(fileUrl)}&name=${encodeURIComponent(fileName)}&zoom=${zoom}&q=${encodeURIComponent(searchQuery.trim())}`;
 
 const getArchiveTerm = (path: string, language: 'tr' | 'en') => {
   const normalizedPath = path.toLowerCase();
@@ -1356,15 +1353,15 @@ export default function Home() {
           key={archivePath}
           className="flex min-h-[4.75rem] flex-col gap-3 rounded-2xl border border-white/30 bg-white/20 p-3 sm:flex-row sm:items-center sm:justify-between"
         >
-          <div className="flex min-w-0 items-center gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             {getArchiveFileIcon(extension)}
-            <div className="flex min-h-9 min-w-0 items-center">
-              <p className="break-words text-sm font-medium leading-tight" style={{ color: textColor }}>
+            <div className="flex min-h-9 min-w-0 flex-1 items-center">
+              <p className="max-w-full text-sm font-medium leading-tight [overflow-wrap:anywhere]" style={{ color: textColor }}>
                 {file.dosya_adi}
               </p>
             </div>
           </div>
-          <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end sm:pl-3">
+          <div className="flex shrink-0 flex-wrap items-center gap-2 sm:ml-auto sm:justify-end sm:pl-3">
             {file.boyut ? (
               <span
                 className="rounded-full border bg-white/20 px-2.5 py-1 text-[11px] font-semibold opacity-90"
@@ -2700,7 +2697,7 @@ export default function Home() {
                 </p>
               </div>
               <div className="flex shrink-0 flex-wrap items-center gap-2">
-                {archivePreview.uzanti === 'pdf' ? (
+                {[...pdfPreviewExtensions, ...documentPreviewExtensions].includes(archivePreview.uzanti) ? (
                   <label className="relative h-11 min-w-[12rem] flex-1 sm:flex-none">
                     <span className="sr-only">{language === 'tr' ? 'PDF içinde ara' : 'Search in PDF'}</span>
                     <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -2709,7 +2706,7 @@ export default function Home() {
                     <input
                       value={archivePreviewSearch}
                       onChange={(event) => setArchivePreviewSearch(event.target.value)}
-                      placeholder={language === 'tr' ? 'PDF içinde ara...' : 'Search PDF...'}
+                      placeholder={language === 'tr' ? 'Belgede ara...' : 'Search document...'}
                       className="h-11 w-full rounded-full border border-slate-200 bg-slate-50/90 px-9 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:ring-2 focus:ring-slate-300 dark:border-slate-700 dark:bg-slate-950/90 dark:text-white dark:focus:ring-slate-600"
                     />
                     {archivePreviewSearch ? (
@@ -2724,7 +2721,7 @@ export default function Home() {
                     ) : null}
                   </label>
                 ) : null}
-                {[...pdfPreviewExtensions, ...imagePreviewExtensions].includes(archivePreview.uzanti) ? (
+                {[...pdfPreviewExtensions, ...documentPreviewExtensions, ...imagePreviewExtensions].includes(archivePreview.uzanti) ? (
                   <div className="flex h-11 items-center rounded-full border border-slate-200 bg-slate-50/90 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-950/90">
                     <button
                       type="button"
@@ -2767,6 +2764,12 @@ export default function Home() {
                   title={archivePreview.ad}
                   className="h-[76vh] w-full rounded-xl border border-slate-200 bg-white dark:border-slate-700"
                 />
+              ) : documentPreviewExtensions.includes(archivePreview.uzanti) ? (
+                <iframe
+                  src={getDocumentPreviewSource(archivePreview.url, archivePreview.ad, archivePreviewZoom, archivePreviewSearch)}
+                  title={archivePreview.ad}
+                  className="h-[76vh] w-full rounded-xl border border-slate-200 bg-white dark:border-slate-700"
+                />
               ) : imagePreviewExtensions.includes(archivePreview.uzanti) ? (
                 <div className="flex h-[76vh] items-center justify-center overflow-auto rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -2777,12 +2780,7 @@ export default function Home() {
                     style={{ transform: `scale(${archivePreviewZoom / 100})` }}
                   />
                 </div>
-              ) : officePreviewExtensions.includes(archivePreview.uzanti) ? (
-                <iframe
-                  src={getOfficePreviewSource(archivePreview.previewUrl)}
-                  title={archivePreview.ad}
-                  className="h-[76vh] w-full rounded-xl border border-slate-200 bg-white dark:border-slate-700"
-                />
+
               ) : (
                 <div className="flex h-[76vh] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-900">
                   <p className="max-w-md text-sm leading-6 text-slate-600 dark:text-slate-300">
