@@ -451,7 +451,7 @@ const getArchivePreviewExtension = (item: ArsivDosyasi) =>
 const pdfPreviewExtensions = ['pdf'];
 const textPreviewExtensions = ['txt', 'md', 'csv', 'm', 'c', 'h', 'cpp', 'hpp', 'cc', 'py', 'js', 'jsx', 'ts', 'tsx', 'java', 'cs', 'json', 'xml', 'html', 'css'];
 const imagePreviewExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'];
-const documentPreviewExtensions = ['doc', 'docx', 'ppt', 'pptx', 'xlsx'];
+const documentPreviewExtensions = ['doc', 'docx', 'xlsx'];
 
 const getPdfPreviewSource = (previewUrl: string, zoom: number, searchQuery: string) => {
   const params = [`toolbar=0`, `navpanes=0`, `zoom=${zoom}`];

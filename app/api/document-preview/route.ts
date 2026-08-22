@@ -251,6 +251,10 @@ export async function GET(request: NextRequest) {
 
   if (!source) return new Response('Missing file URL.', { status: 400 });
 
+  if (extension === 'ppt' || extension === 'pptx') {
+    return new Response('PPT/PPTX preview requires a generated PDF preview.', { status: 415 });
+  }
+
   let fileUrl: URL;
 
   try {
