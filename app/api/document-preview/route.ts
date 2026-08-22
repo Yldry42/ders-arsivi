@@ -207,11 +207,47 @@ const extractLegacyOfficeText = (buffer: Buffer, extension: string) => {
   ];
 };
 
+const renderParagraphPreview = (paragraphs: string[], query: string) =>
+  paragraphs.map((paragraph) => `<p class="${/^(Slayt|Sayfa) \d+$/.test(paragraph) ? 'section' : ''}">${highlight(paragraph, query)}</p>`).join('\n');
+
+const renderSlidePreview = (paragraphs: string[], query: string) => {
+  const slides: { title: string; lines: string[] }[] = [];
+
+  for (const paragraph of paragraphs) {
+    if (/^Slayt \d+$/i.test(paragraph)) {
+      slides.push({ title: paragraph, lines: [] });
+    } else if (slides.length) {
+      slides[slides.length - 1].lines.push(paragraph);
+    } else {
+      slides.push({ title: 'Slayt 1', lines: [paragraph] });
+    }
+  }
+
+  if (!slides.length) return renderParagraphPreview(paragraphs, query);
+
+  return `<div class="slide-deck">${slides
+    .map((slide, index) => {
+      const [firstLine, ...otherLines] = slide.lines;
+      return `<section class="slide-card">
+        <div class="slide-header">
+          <span>${highlight(slide.title || `Slayt ${index + 1}`, query)}</span>
+          <span>${index + 1} / ${slides.length}</span>
+        </div>
+        <div class="slide-stage">
+          ${firstLine ? `<h2>${highlight(firstLine, query)}</h2>` : ''}
+          ${otherLines.map((line) => `<p>${highlight(line, query)}</p>`).join('\n')}
+        </div>
+      </section>`;
+    })
+    .join('\n')}</div>`;
+};
+
 export async function GET(request: NextRequest) {
   const source = request.nextUrl.searchParams.get('url');
   const name = request.nextUrl.searchParams.get('name') ?? 'document';
   const query = request.nextUrl.searchParams.get('q') ?? '';
   const zoom = Math.min(180, Math.max(70, Number(request.nextUrl.searchParams.get('zoom') ?? 100) || 100));
+  const extension = getFileExtension(name);
 
   if (!source) return new Response('Missing file URL.', { status: 400 });
 
@@ -240,6 +276,10 @@ export async function GET(request: NextRequest) {
   } catch {
     return new Response('Document preview could not be generated.', { status: 422 });
   }
+
+  const contentHtml = extension === 'ppt' || extension === 'pptx'
+    ? renderSlidePreview(paragraphs, query)
+    : renderParagraphPreview(paragraphs, query);
 
   const body = `<!doctype html>
 <html lang="tr">
@@ -281,6 +321,56 @@ export async function GET(request: NextRequest) {
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
+    .slide-deck {
+      display: grid;
+      gap: 28px;
+    }
+    .slide-card {
+      aspect-ratio: 16 / 9;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      border-radius: 24px;
+      background:
+        radial-gradient(circle at top right, rgba(59, 130, 246, 0.13), transparent 34%),
+        linear-gradient(135deg, #ffffff 0%, #f8fafc 58%, #eef2ff 100%);
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+    }
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.28);
+      padding: 14px 20px;
+      color: #64748b;
+      font-size: 0.76rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .slide-stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: clamp(24px, 5vw, 58px);
+    }
+    .slide-stage h2 {
+      max-width: 92%;
+      margin: 0 0 1.1rem;
+      color: #0f172a;
+      font-size: clamp(1.65rem, 3.4vw, 3.35rem);
+      line-height: 1.08;
+      overflow-wrap: anywhere;
+    }
+    .slide-stage p {
+      max-width: 88%;
+      margin: 0 0 0.72rem;
+      color: #1e293b;
+      font-size: clamp(1rem, 1.45vw, 1.45rem);
+      line-height: 1.35;
+    }
     mark {
       border-radius: 0.35rem;
       background: #fde68a;
@@ -290,6 +380,15 @@ export async function GET(request: NextRequest) {
     @media (prefers-color-scheme: dark) {
       body { background: #020617; color: #e2e8f0; }
       p.section { color: #cbd5e1; }
+      .slide-card {
+        border-color: rgba(100, 116, 139, 0.55);
+        background:
+          radial-gradient(circle at top right, rgba(96, 165, 250, 0.16), transparent 34%),
+          linear-gradient(135deg, #0f172a 0%, #111827 60%, #1e1b4b 100%);
+      }
+      .slide-header { color: #cbd5e1; border-color: rgba(100, 116, 139, 0.45); }
+      .slide-stage h2 { color: #f8fafc; }
+      .slide-stage p { color: #dbeafe; }
       mark { background: #f59e0b; color: #111827; }
     }
   </style>
@@ -297,7 +396,7 @@ export async function GET(request: NextRequest) {
 <body>
   <main>
     <h1>${escapeHtml(name)}</h1>
-    ${paragraphs.map((paragraph) => `<p class="${/^(Slayt|Sayfa) \d+$/.test(paragraph) ? 'section' : ''}">${highlight(paragraph, query)}</p>`).join('\n')}
+    ${contentHtml}
   </main>
 </body>
 </html>`;
