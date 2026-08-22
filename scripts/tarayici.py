@@ -5,11 +5,13 @@ import subprocess
 import tempfile
 from urllib.parse import quote
 
-# Cloudflare Bucket'ındaki Public Development URL / custom domain.
+# Cloudflare R2 Public Development URL veya ileride kullanacagin custom domain.
 base_url = "https://pub-9166db2e46694c818420c32e7545d40c.r2.dev"
 
-tum_dosyalar = []
+# R2'deki ana yil klasorleri ile ayni isimde olmalilar.
 ana_klasorler = ["22-23", "23-24", "24-25", "25-26"]
+
+# Office dosyalari icin uretilen PDF onizlemeler burada tutulur.
 preview_kok_klasor = "_previews"
 
 atlanacak_dosyalar = {
@@ -18,8 +20,8 @@ atlanacak_dosyalar = {
     ".ds_store",
 }
 
-# LibreOffice ile PDF'e çevrilecek Office dosyaları.
-# Eski .doc/.ppt için gerçek önizlemeye en yakın ve hızlı yol budur.
+# LibreOffice ile PDF'e cevrilecek Office dosyalari.
+# Site bu PDF'leri bulursa PPT/DOC yerine PDF onizleme acar.
 preview_uretilecek_uzantilar = {".doc", ".docx", ".ppt", ".pptx"}
 
 
@@ -65,6 +67,7 @@ def preview_pdf_uret(tam_yol, hedef_preview_yol):
     if not soffice_yolu:
         return False
 
+    # Onizleme PDF'i dosyadan daha yeniyse yeniden uretmeye gerek yok.
     if os.path.exists(hedef_preview_yol) and os.path.getmtime(hedef_preview_yol) >= os.path.getmtime(tam_yol):
         return True
 
@@ -85,7 +88,7 @@ def preview_pdf_uret(tam_yol, hedef_preview_yol):
                 check=True,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
-                timeout=90,
+                timeout=120,
             )
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
             return False
@@ -101,6 +104,11 @@ def preview_pdf_uret(tam_yol, hedef_preview_yol):
         shutil.move(olusan_pdf, hedef_preview_yol)
         return True
 
+
+tum_dosyalar = []
+preview_aday_sayisi = 0
+preview_uretilen_sayisi = 0
+preview_basarisiz = []
 
 for yil in ana_klasorler:
     if os.path.exists(yil):
@@ -138,12 +146,16 @@ for yil in ana_klasorler:
                 }
 
                 if uzanti in preview_uretilecek_uzantilar:
+                    preview_aday_sayisi += 1
                     hedef_preview_yol = preview_pdf_yolu(yol)
 
                     if preview_pdf_uret(tam_yol, hedef_preview_yol):
                         encoded_preview_yol = quote(hedef_preview_yol, safe="/")
                         kayit["preview_yol"] = hedef_preview_yol
                         kayit["preview_url"] = f"{base_url}/{encoded_preview_yol}"
+                        preview_uretilen_sayisi += 1
+                    else:
+                        preview_basarisiz.append(yol)
 
                 tum_dosyalar.append(kayit)
 
@@ -151,8 +163,25 @@ with open("arsiv.json", "w", encoding="utf-8") as f:
     json.dump(tum_dosyalar, f, ensure_ascii=False, indent=2)
     f.write("\n")
 
-if not soffice_yolu:
-    print("LibreOffice/soffice bulunamadı. DOC/PPT PDF önizlemeleri üretilmedi.")
-    print("LibreOffice kurarsan bu script otomatik olarak _previews klasörüne PDF önizlemeleri üretir.")
+print(f"Islem tamam. {len(tum_dosyalar)} dosya ile yeni arsiv.json hazir.")
 
-print(f"İşlem tamam! {len(tum_dosyalar)} dosya ile yeni arsiv.json hazır.")
+if soffice_yolu:
+    print(f"LibreOffice bulundu: {soffice_yolu}")
+    print(f"PDF onizleme adayi: {preview_aday_sayisi}")
+    print(f"PDF onizleme hazir/uretildi: {preview_uretilen_sayisi}")
+else:
+    print("LibreOffice/soffice bulunamadi. DOC/PPT PDF onizlemeleri uretilmedi.")
+    print("LibreOffice kurarsan script otomatik olarak _previews klasorune PDF onizlemeleri uretir.")
+
+if preview_basarisiz:
+    print(f"PDF onizlemesi uretilemeyen dosya sayisi: {len(preview_basarisiz)}")
+    for yol in preview_basarisiz[:20]:
+        print(f"- {yol}")
+    if len(preview_basarisiz) > 20:
+        print(f"... ve {len(preview_basarisiz) - 20} dosya daha")
+
+print("")
+print("R2'ye yuklemen gerekenler:")
+print("- 22-23, 23-24, 24-25, 25-26 klasorleri")
+print(f"- {preview_kok_klasor} klasoru")
+print("- Bu scriptin olusturdugu arsiv.json dosyasini projedeki data/arsiv.json yerine kopyala")
