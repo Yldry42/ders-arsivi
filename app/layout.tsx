@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import "pptx-react-viewer/styles";
 
 
 export const metadata: Metadata = {
