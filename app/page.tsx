@@ -1377,17 +1377,17 @@ export default function Home() {
       return (
         <div
           key={archivePath}
-          className="flex min-h-[4.75rem] flex-col gap-3 rounded-2xl border border-white/30 bg-white/20 p-3 sm:flex-row sm:items-center sm:justify-between"
+          className="grid min-h-[4.75rem] grid-cols-1 gap-3 rounded-2xl border border-white/30 bg-white/20 p-3 text-left sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
         >
-          <div className="flex min-w-0 flex-1 items-center gap-3">
+          <div className="flex min-w-0 items-center justify-start gap-3 text-left">
             {getArchiveFileIcon(extension)}
-            <div className="flex min-h-9 min-w-0 flex-1 items-center">
+            <div className="flex min-h-9 min-w-0 flex-1 items-center justify-start text-left">
               <p className="max-w-full text-sm font-medium leading-tight [overflow-wrap:anywhere]" style={{ color: textColor }}>
                 {file.dosya_adi}
               </p>
             </div>
           </div>
-          <div className="flex shrink-0 flex-wrap items-center gap-2 sm:ml-auto sm:justify-end sm:pl-3">
+          <div className="flex shrink-0 flex-wrap items-center justify-start gap-2 sm:justify-end sm:pl-3">
             {file.boyut ? (
               <span
                 className="rounded-full border bg-white/20 px-2.5 py-1 text-[11px] font-semibold opacity-90"
