@@ -7,6 +7,8 @@ type R2Object = {
 };
 
 const atlanacakDosyalar = new Set(['desktop.ini', 'thumbs.db', '.ds_store']);
+const previewRoot = '_previews/';
+const pdfPreviewSourceExtensions = new Set(['doc', 'docx', 'ppt', 'pptx']);
 
 const encodeArchivePath = (path: string) =>
   path
@@ -16,6 +18,14 @@ const encodeArchivePath = (path: string) =>
     .join('/');
 
 const getFileName = (key: string) => key.split('/').filter(Boolean).pop() ?? key;
+
+const getFileExtension = (fileName: string) => fileName.split('.').pop()?.toLowerCase() ?? '';
+
+const getPreviewKey = (key: string) => {
+  const lastDotIndex = key.lastIndexOf('.');
+  const keyWithoutExtension = lastDotIndex > -1 ? key.slice(0, lastDotIndex) : key;
+  return `${previewRoot}${keyWithoutExtension}.preview.pdf`;
+};
 
 const getReadableSize = (byteCount: number) => {
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -135,22 +145,32 @@ export async function GET() {
   try {
     const publicBaseUrl = process.env.R2_PUBLIC_BASE_URL?.replace(/\/$/, '') ?? '';
     const objects = await listR2Objects();
+    const objectKeys = new Set(objects.map(({ key }) => key));
 
     const archiveItems = objects
       .filter(({ key }) => {
         const fileName = getFileName(key);
         const lowerFileName = fileName.toLowerCase();
 
-        return key && !key.endsWith('/') && !atlanacakDosyalar.has(lowerFileName) && !fileName.startsWith('~$');
+        return key && !key.endsWith('/') && !key.startsWith(previewRoot) && !atlanacakDosyalar.has(lowerFileName) && !fileName.startsWith('~$');
       })
-      .map(({ key, size }) => ({
-        yil: key.split('/')[0] ?? '',
-        dosya_adi: getFileName(key),
-        yerel_yol: key,
-        url: publicBaseUrl ? `${publicBaseUrl}/${encodeArchivePath(key)}` : undefined,
-        boyut_byte: size,
-        boyut: getReadableSize(size),
-      }));
+      .map(({ key, size }) => {
+        const fileName = getFileName(key);
+        const extension = getFileExtension(fileName);
+        const previewKey = pdfPreviewSourceExtensions.has(extension) ? getPreviewKey(key) : '';
+        const hasPreview = Boolean(previewKey && objectKeys.has(previewKey));
+
+        return {
+          yil: key.split('/')[0] ?? '',
+          dosya_adi: fileName,
+          yerel_yol: key,
+          url: publicBaseUrl ? `${publicBaseUrl}/${encodeArchivePath(key)}` : undefined,
+          preview_yol: hasPreview ? previewKey : undefined,
+          preview_url: hasPreview && publicBaseUrl ? `${publicBaseUrl}/${encodeArchivePath(previewKey)}` : undefined,
+          boyut_byte: size,
+          boyut: getReadableSize(size),
+        };
+      });
 
     return NextResponse.json(archiveItems, {
       headers: {
