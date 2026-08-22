@@ -1454,7 +1454,8 @@ export default function Home() {
           <button
             type="button"
             onClick={() => setOpenArchiveFolders((current) => ({ ...current, [folderKey]: !current[folderKey] }))}
-            className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-white/20"
+            className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset"
+            style={{ '--tw-ring-color': `${accentColor}80` } as CSSProperties}
             aria-expanded={isFolderOpen}
           >
             <span className="flex min-w-0 items-center gap-3">
