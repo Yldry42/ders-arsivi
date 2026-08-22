@@ -42,6 +42,8 @@ type ArsivDosyasi = {
   dosya_adi: string;
   yerel_yol?: string;
   url?: string;
+  preview_yol?: string;
+  preview_url?: string;
   boyut?: string;
   boyut_byte?: number;
 };
@@ -429,13 +431,22 @@ const getArchiveFileUrl = (item: ArsivDosyasi) => {
 const getArchiveDownloadUrl = (item: ArsivDosyasi) =>
   `/api/download?url=${encodeURIComponent(getArchiveFileUrl(item))}&name=${encodeURIComponent(item.dosya_adi)}`;
 
+const getArchivePreviewFileUrl = (item: ArsivDosyasi) => {
+  if (item.preview_yol) return buildArchivePublicUrl(item.preview_yol);
+  if (item.preview_url) return item.preview_url;
+  return getArchiveFileUrl(item);
+};
+
 const getArchivePreviewUrl = (item: ArsivDosyasi) =>
-  `/api/preview?url=${encodeURIComponent(getArchiveFileUrl(item))}&name=${encodeURIComponent(item.dosya_adi)}`;
+  `/api/preview?url=${encodeURIComponent(getArchivePreviewFileUrl(item))}&name=${encodeURIComponent(item.preview_yol || item.preview_url ? `${item.dosya_adi}.pdf` : item.dosya_adi)}`;
 
 const getFileExtension = (fileName: string) => {
   const extension = fileName.split('.').pop();
   return extension ? extension.toLowerCase() : '';
 };
+
+const getArchivePreviewExtension = (item: ArsivDosyasi) =>
+  item.preview_yol || item.preview_url ? 'pdf' : getFileExtension(item.dosya_adi);
 
 const pdfPreviewExtensions = ['pdf'];
 const textPreviewExtensions = ['txt', 'md', 'csv', 'm', 'c', 'h', 'cpp', 'hpp', 'cc', 'py', 'js', 'jsx', 'ts', 'tsx', 'java', 'cs', 'json', 'xml', 'html', 'css'];
@@ -1343,6 +1354,7 @@ export default function Home() {
     const rootFolders = Object.values(archiveTree.folders).sort(compareArchiveFolders);
     const renderArchiveFileRow = (file: ArsivDosyasi) => {
       const extension = getFileExtension(file.dosya_adi);
+      const previewExtension = getArchivePreviewExtension(file);
       const url = getArchiveFileUrl(file);
       const previewUrl = getArchivePreviewUrl(file);
       const downloadUrl = getArchiveDownloadUrl(file);
@@ -1372,7 +1384,7 @@ export default function Home() {
             ) : null}
             <button
               type="button"
-              onClick={() => setArchivePreview({ ad: file.dosya_adi, url, previewUrl, downloadUrl, uzanti: extension })}
+              onClick={() => setArchivePreview({ ad: file.dosya_adi, url, previewUrl, downloadUrl, uzanti: previewExtension })}
               className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-700 hover:shadow-md"
             >
               <span aria-hidden>👁️</span>
@@ -2277,6 +2289,7 @@ export default function Home() {
               <div className="hidden">
                 {selectedNoteOwner.files.map(({ ders, file }) => {
                   const extension = getFileExtension(file.dosya_adi);
+                  const previewExtension = getArchivePreviewExtension(file);
                   const previewUrl = getArchivePreviewUrl(file);
                   const downloadUrl = getArchiveDownloadUrl(file);
                   const archivePath = getArchivePath(file);
@@ -2307,7 +2320,7 @@ export default function Home() {
                         <div className="flex shrink-0 gap-2">
                           <button
                             type="button"
-                            onClick={() => setArchivePreview({ ad: file.dosya_adi, url: getArchiveFileUrl(file), previewUrl, downloadUrl, uzanti: extension })}
+                            onClick={() => setArchivePreview({ ad: file.dosya_adi, url: getArchiveFileUrl(file), previewUrl, downloadUrl, uzanti: previewExtension })}
                             className="rounded-full bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700"
                           >
                             {locale.preview}
