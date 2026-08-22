@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-type PptxScrollViewerInstance = {
+type DocxScrollViewerInstance = {
   load: (source: string | ArrayBuffer) => Promise<void>;
   destroy: () => void;
   setScale: (scale: number) => void;
@@ -11,10 +11,10 @@ type PptxScrollViewerInstance = {
   relayout?: () => void;
   findText: (query: string) => Promise<unknown[]>;
   clearFind: () => void;
-  slideCount: number;
+  pageCount: number;
 };
 
-type PptxScrollViewerConstructor = new (
+type DocxScrollViewerConstructor = new (
   container: HTMLElement,
   options?: {
     width?: number;
@@ -28,13 +28,13 @@ type PptxScrollViewerConstructor = new (
     dpr?: number;
     useGoogleFonts?: boolean;
     mode?: 'main' | 'worker';
-    onVisibleSlideChange?: (topIndex: number, total: number) => void;
+    onVisiblePageChange?: (topIndex: number, total: number) => void;
     onScaleChange?: (scale: number) => void;
     onError?: (error: Error) => void;
   },
-) => PptxScrollViewerInstance;
+) => DocxScrollViewerInstance;
 
-type PptxBrowserPreviewProps = {
+type DocxBrowserPreviewProps = {
   fileName: string;
   fileUrl: string;
   previewUrl: string;
@@ -47,12 +47,12 @@ const productionPreviewOrigin = 'https://ders-arsivi.vercel.app';
 const getProductionPreviewUrl = (previewUrl: string) =>
   previewUrl.startsWith('/api/') ? `${productionPreviewOrigin}${previewUrl}` : previewUrl;
 
-export default function PptxBrowserPreview({ fileName, fileUrl, previewUrl, zoom, searchQuery }: PptxBrowserPreviewProps) {
+export default function DocxBrowserPreview({ fileName, fileUrl, previewUrl, zoom, searchQuery }: DocxBrowserPreviewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const viewerRef = useRef<PptxScrollViewerInstance | null>(null);
+  const viewerRef = useRef<DocxScrollViewerInstance | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [message, setMessage] = useState('');
-  const [slideInfo, setSlideInfo] = useState({ current: 1, total: 0 });
+  const [pageInfo, setPageInfo] = useState({ current: 1, total: 0 });
 
   useEffect(() => {
     let cancelled = false;
@@ -61,14 +61,14 @@ export default function PptxBrowserPreview({ fileName, fileUrl, previewUrl, zoom
 
     setStatus('loading');
     setMessage('');
-    setSlideInfo({ current: 1, total: 0 });
+    setPageInfo({ current: 1, total: 0 });
     viewerRef.current?.destroy();
     viewerRef.current = null;
     container.replaceChildren();
 
     (async () => {
       try {
-        const { PptxScrollViewer } = await import('@silurus/ooxml/pptx') as { PptxScrollViewer: PptxScrollViewerConstructor };
+        const { DocxScrollViewer } = await import('@silurus/ooxml/docx') as { DocxScrollViewer: DocxScrollViewerConstructor };
         const proxyResponse = await fetch(previewUrl).catch(() => null);
         const directResponse = proxyResponse?.ok ? null : await fetch(fileUrl).catch(() => null);
         const productionProxyResponse =
@@ -78,33 +78,28 @@ export default function PptxBrowserPreview({ fileName, fileUrl, previewUrl, zoom
         if (!response?.ok) {
           throw new Error(
             proxyResponse
-              ? `PPTX dosyası alınamadı (${proxyResponse.status}${directResponse ? ` / ${directResponse.status}` : ''}${productionProxyResponse ? ` / ${productionProxyResponse.status}` : ''})`
-              : 'PPTX dosyası alınamadı. Local ortam R2 dosyasına erişemiyor olabilir.',
+              ? `DOCX dosyası alınamadı (${proxyResponse.status}${directResponse ? ` / ${directResponse.status}` : ''}${productionProxyResponse ? ` / ${productionProxyResponse.status}` : ''})`
+              : 'DOCX dosyası alınamadı. Local ortam R2 dosyasına erişemiyor olabilir.',
           );
         }
 
         const buffer = await response.arrayBuffer();
         if (cancelled) return;
 
-        const viewerWidth = Math.max(720, container.clientWidth);
-
-        const viewer = new PptxScrollViewer(container, {
-          width: viewerWidth,
+        const viewer = new DocxScrollViewer(container, {
+          width: Math.max(720, Math.min(container.clientWidth - 32, 980)),
           background: 'transparent',
-          gap: 0,
-          paddingTop: 0,
-          paddingBottom: 0,
-          paddingLeft: 0,
-          paddingRight: 0,
+          gap: 18,
+          paddingTop: 18,
+          paddingBottom: 22,
+          paddingLeft: 12,
+          paddingRight: 12,
           dpr: Math.min(window.devicePixelRatio || 1, 2),
           useGoogleFonts: true,
-          pageShadow: false,
+          pageShadow: '0 14px 34px rgba(15, 23, 42, 0.14)',
           mode: 'main',
-          onVisibleSlideChange: (topIndex, total) => {
-            if (!cancelled) setSlideInfo({ current: topIndex + 1, total });
-          },
-          onScaleChange: () => {
-            // Üst bardaki zoom state'i dışarıdan geliyor; burada ayrıca state tutmaya gerek yok.
+          onVisiblePageChange: (topIndex, total) => {
+            if (!cancelled) setPageInfo({ current: topIndex + 1, total });
           },
           onError: () => undefined,
         });
@@ -122,12 +117,12 @@ export default function PptxBrowserPreview({ fileName, fileUrl, previewUrl, zoom
           return;
         }
 
-        setSlideInfo({ current: 1, total: viewer.slideCount });
+        setPageInfo({ current: 1, total: viewer.pageCount });
         setStatus('ready');
       } catch (error) {
         if (cancelled) return;
         setStatus('error');
-        setMessage(error instanceof Error ? error.message : 'PPTX önizleme yüklenemedi.');
+        setMessage(error instanceof Error ? error.message : 'DOCX önizleme yüklenemedi.');
       }
     })();
 
@@ -159,7 +154,7 @@ export default function PptxBrowserPreview({ fileName, fileUrl, previewUrl, zoom
 
     let cancelled = false;
     viewer.findText(query).catch((error) => {
-      if (!cancelled) console.error('[Ders Arşivi] PPTX arama hatası:', error);
+      if (!cancelled) console.error('[Ders Arşivi] DOCX arama hatası:', error);
     });
 
     return () => {
@@ -168,10 +163,7 @@ export default function PptxBrowserPreview({ fileName, fileUrl, previewUrl, zoom
   }, [status, searchQuery]);
 
   return (
-    <div
-      className="relative w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-950"
-      style={{ aspectRatio: '16 / 9' }}
-    >
+    <div className="relative h-[76vh] overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-950">
       {status !== 'ready' ? (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-slate-50/95 px-6 text-center dark:bg-slate-950/95">
           {status === 'loading' ? (
@@ -183,16 +175,16 @@ export default function PptxBrowserPreview({ fileName, fileUrl, previewUrl, zoom
             </>
           ) : (
             <>
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">PPTX önizleme açılamadı.</p>
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">DOCX önizleme açılamadı.</p>
               <p className="max-w-md text-xs leading-5 text-slate-500 dark:text-slate-400">{message}</p>
             </>
           )}
         </div>
       ) : null}
 
-      {status === 'ready' && slideInfo.total > 0 ? (
+      {status === 'ready' && pageInfo.total > 0 ? (
         <div className="pointer-events-none absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full bg-slate-950/85 px-4 py-2 text-xs font-bold tracking-[0.18em] text-white shadow-lg">
-          {slideInfo.current} / {slideInfo.total}
+          {pageInfo.current} / {pageInfo.total}
         </div>
       ) : null}
 

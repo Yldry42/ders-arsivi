@@ -6,6 +6,7 @@ import arsivVerileri from '../data/arsiv.json';
 import notSahipleriVerileri from '../data/not-sahipleri.json';
 import notDagilimlariVerileri from '../data/not-dagilimlari.json';
 import PptxBrowserPreview from './PptxBrowserPreview';
+import DocxBrowserPreview from './DocxBrowserPreview';
 
 type Ders = {
   id: number;
@@ -454,8 +455,9 @@ const pdfPreviewExtensions = ['pdf'];
 const textPreviewExtensions = ['txt', 'md', 'csv', 'm', 'c', 'h', 'cpp', 'hpp', 'cc', 'py', 'js', 'jsx', 'ts', 'tsx', 'java', 'cs', 'json', 'xml', 'html', 'css'];
 const imagePreviewExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'];
 const documentPreviewExtensions = ['xlsx'];
+const docxPreviewExtensions = ['docx'];
 const pptxPreviewExtensions = ['pptx'];
-const previewableExtensions = [...pdfPreviewExtensions, ...textPreviewExtensions, ...imagePreviewExtensions, ...documentPreviewExtensions, ...pptxPreviewExtensions];
+const previewableExtensions = [...pdfPreviewExtensions, ...textPreviewExtensions, ...imagePreviewExtensions, ...documentPreviewExtensions, ...docxPreviewExtensions, ...pptxPreviewExtensions];
 
 const getPdfPreviewSource = (previewUrl: string, zoom: number, searchQuery: string) => {
   const params = [`toolbar=0`, `navpanes=0`, `zoom=${zoom}`];
@@ -2739,7 +2741,7 @@ export default function Home() {
                 </p>
               </div>
               <div className="flex shrink-0 flex-wrap items-center gap-2">
-                {[...pdfPreviewExtensions, ...documentPreviewExtensions, ...pptxPreviewExtensions].includes(archivePreview.uzanti) ? (
+                {[...pdfPreviewExtensions, ...documentPreviewExtensions, ...docxPreviewExtensions, ...pptxPreviewExtensions].includes(archivePreview.uzanti) ? (
                   <label className="relative h-11 min-w-[12rem] flex-1 sm:flex-none">
                     <span className="sr-only">{language === 'tr' ? 'PDF içinde ara' : 'Search in PDF'}</span>
                     <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -2763,7 +2765,7 @@ export default function Home() {
                     ) : null}
                   </label>
                 ) : null}
-                {[...pdfPreviewExtensions, ...documentPreviewExtensions, ...imagePreviewExtensions, ...pptxPreviewExtensions].includes(archivePreview.uzanti) ? (
+                {[...pdfPreviewExtensions, ...documentPreviewExtensions, ...docxPreviewExtensions, ...imagePreviewExtensions, ...pptxPreviewExtensions].includes(archivePreview.uzanti) ? (
                   <div className="flex h-11 items-center rounded-full border border-slate-200 bg-slate-50/90 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-950/90">
                     <button
                       type="button"
@@ -2808,6 +2810,14 @@ export default function Home() {
                 />
               ) : pptxPreviewExtensions.includes(archivePreview.uzanti) ? (
                 <PptxBrowserPreview
+                  fileName={archivePreview.ad}
+                  fileUrl={archivePreview.url}
+                  previewUrl={archivePreview.previewUrl}
+                  zoom={archivePreviewZoom}
+                  searchQuery={archivePreviewSearch}
+                />
+              ) : docxPreviewExtensions.includes(archivePreview.uzanti) ? (
+                <DocxBrowserPreview
                   fileName={archivePreview.ad}
                   fileUrl={archivePreview.url}
                   previewUrl={archivePreview.previewUrl}

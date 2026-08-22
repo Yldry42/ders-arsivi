@@ -1,0 +1,157 @@
+name: Generate R2 Office PDF Previews
+
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Var olan PDF önizlemeleri yeniden üret"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+jobs:
+  generate-previews:
+    name: Convert DOC/PPT files to PDF previews
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    env:
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      FORCE_PREVIEWS: ${{ inputs.force }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check required secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          missing=0
+          for name in R2_ACCOUNT_ID R2_BUCKET_NAME AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::$name secret is missing."
+              missing=1
+            fi
+          done
+
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Install LibreOffice and AWS CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          sudo apt-get update
+          sudo apt-get install -y \
+            awscli \
+            libreoffice \
+            libreoffice-impress \
+            libreoffice-writer \
+            fonts-crosextra-carlito \
+            fonts-crosextra-caladea \
+            fonts-dejavu \
+            fonts-liberation
+
+      - name: Download archive objects from R2
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p r2-source r2-preview-output
+          aws s3 sync "s3://${R2_BUCKET_NAME}" r2-source \
+            --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
+            --exclude "_previews/*"
+
+      - name: Convert Office files to PDF previews
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          converted=0
+          skipped=0
+          failed=0
+
+          while IFS= read -r -d '' source_file; do
+            relative_path="${source_file#r2-source/}"
+            base_without_ext="${relative_path%.*}"
+            preview_key="_previews/${base_without_ext}.preview.pdf"
+            preview_local="r2-preview-output/${preview_key}"
+
+            if [ "${FORCE_PREVIEWS}" != "true" ]; then
+              if aws s3 ls "s3://${R2_BUCKET_NAME}/${preview_key}" \
+                --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" >/dev/null 2>&1; then
+                echo "Skip existing preview: ${preview_key}"
+                skipped=$((skipped + 1))
+                continue
+              fi
+            fi
+
+            mkdir -p "$(dirname "${preview_local}")"
+            temp_dir="$(mktemp -d)"
+
+            echo "Convert: ${relative_path}"
+            if soffice --headless --convert-to pdf --outdir "${temp_dir}" "${source_file}" >/tmp/soffice.log 2>&1; then
+              generated_pdf="${temp_dir}/$(basename "${base_without_ext}").pdf"
+
+              if [ -f "${generated_pdf}" ]; then
+                mv "${generated_pdf}" "${preview_local}"
+                converted=$((converted + 1))
+              else
+                echo "::warning::PDF output was not found for ${relative_path}"
+                cat /tmp/soffice.log || true
+                failed=$((failed + 1))
+              fi
+            else
+              echo "::warning::LibreOffice conversion failed for ${relative_path}"
+              cat /tmp/soffice.log || true
+              failed=$((failed + 1))
+            fi
+
+            rm -rf "${temp_dir}"
+          done < <(find r2-source -type f \( -iname "*.doc" -o -iname "*.docx" -o -iname "*.ppt" -o -iname "*.pptx" \) -print0)
+
+          {
+            echo "converted=${converted}"
+            echo "skipped=${skipped}"
+            echo "failed=${failed}"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "Converted: ${converted}"
+          echo "Skipped: ${skipped}"
+          echo "Failed: ${failed}"
+
+      - name: Upload generated previews to R2
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ ! -d r2-preview-output/_previews ]; then
+            echo "No new previews to upload."
+            exit 0
+          fi
+
+          aws s3 sync r2-preview-output/_previews "s3://${R2_BUCKET_NAME}/_previews" \
+            --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
+            --content-type "application/pdf"
+
+      - name: Summary
+        shell: bash
+        run: |
+          {
+            echo "## R2 PDF önizleme üretimi"
+            echo ""
+            echo "- DOC/DOCX/PPT/PPTX dosyaları R2'den okundu."
+            echo "- PDF önizlemeler \`_previews/...\` altına yüklendi."
+            echo "- Site \`/api/archive\` üzerinden bu önizlemeleri otomatik algılar."
+          } >> "$GITHUB_STEP_SUMMARY"
