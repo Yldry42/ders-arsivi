@@ -5,7 +5,6 @@ import akademisyenVerileri from '../data/akademisyen.json';
 import arsivVerileri from '../data/arsiv.json';
 import notSahipleriVerileri from '../data/not-sahipleri.json';
 import notDagilimlariVerileri from '../data/not-dagilimlari.json';
-import PptxBrowserPreview from './PptxBrowserPreview';
 
 type Ders = {
   id: number;
@@ -453,8 +452,7 @@ const pdfPreviewExtensions = ['pdf'];
 const textPreviewExtensions = ['txt', 'md', 'csv', 'm', 'c', 'h', 'cpp', 'hpp', 'cc', 'py', 'js', 'jsx', 'ts', 'tsx', 'java', 'cs', 'json', 'xml', 'html', 'css'];
 const imagePreviewExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'];
 const documentPreviewExtensions = ['xlsx'];
-const pptxPreviewExtensions = ['pptx'];
-const previewableExtensions = [...pdfPreviewExtensions, ...textPreviewExtensions, ...imagePreviewExtensions, ...documentPreviewExtensions, ...pptxPreviewExtensions];
+const previewableExtensions = [...pdfPreviewExtensions, ...textPreviewExtensions, ...imagePreviewExtensions, ...documentPreviewExtensions];
 
 const getPdfPreviewSource = (previewUrl: string, zoom: number, searchQuery: string) => {
   const params = [`toolbar=0`, `navpanes=0`, `zoom=${zoom}`];
@@ -2799,8 +2797,6 @@ export default function Home() {
                   title={archivePreview.ad}
                   className="h-[76vh] w-full rounded-xl border border-slate-200 bg-white dark:border-slate-700"
                 />
-              ) : pptxPreviewExtensions.includes(archivePreview.uzanti) ? (
-                <PptxBrowserPreview fileName={archivePreview.ad} previewUrl={archivePreview.previewUrl} />
               ) : documentPreviewExtensions.includes(archivePreview.uzanti) ? (
                 <iframe
                   src={getDocumentPreviewSource(archivePreview.url, archivePreview.ad, archivePreviewZoom, archivePreviewSearch)}
