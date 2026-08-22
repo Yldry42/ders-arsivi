@@ -294,27 +294,27 @@
     "id": 23,
     "kod": "UZB",
     "no": "106E",
-    "ders_adi": "Uzay Mühendisliği Tasarımına Giriş",
+    "ders_adi": "Uzay Mühendisliğine ve Tasarıma Giriş",
     "ogretim_uyesi": "Alim Rüstem Aslan",
     "donem": "Bahar",
     "yil": "2022-2023",
     "kategori": "Bölüm Dersleri",
     "renk_kodu": "#4688F4",
     "drive_link": "https://drive.google.com/...",
-    "ders_adi_en": "Introduction to Space Engineering Design"
+    "ders_adi_en": "Introduction to Astronautical Engineering and Design"
   },
   {
     "id": 24,
     "kod": "UZB",
     "no": "112E",
-    "ders_adi": "Bilgisayarla Teknik Resim",
+    "ders_adi": "Bilgisayar Destekli Teknik Resim",
     "ogretim_uyesi": "Hüsnü Barbaros Soyer",
     "donem": "Güz",
     "yil": "2022-2023",
     "kategori": "Bölüm Dersleri",
     "renk_kodu": "#4688F4",
     "drive_link": "https://drive.google.com/...",
-    "ders_adi_en": "Computer-Aided Technical Drawing"
+    "ders_adi_en": "Computer Aided Drafting"
   },
   {
     "id": 25,
@@ -411,33 +411,33 @@
     "id": 32,
     "kod": "UZB",
     "no": "419E",
-    "ders_adi": "SSD I",
+    "ders_adi": "Uzay Aracı Sistem Tasarımı I",
     "ogretim_uyesi": "Alim Rüstem Aslan",
     "donem": "Güz",
     "yil": "2025-2026",
     "kategori": "Bölüm Dersleri",
     "renk_kodu": "#4688F4",
     "drive_link": "https://drive.google.com/...",
-    "ders_adi_en": "SSD I"
+    "ders_adi_en": "Spacecraft Systems Design I"
   },
   {
     "id": 33,
     "kod": "UZB",
     "no": "420E",
-    "ders_adi": "SSD II",
+    "ders_adi": "Uzay Aracı Sistem Tasarımı II",
     "ogretim_uyesi": "Alim Rüstem Aslan",
     "donem": "Bahar",
     "yil": "2025-2026",
     "kategori": "Bölüm Dersleri",
     "renk_kodu": "#4688F4",
     "drive_link": "https://drive.google.com/...",
-    "ders_adi_en": "SSD II"
+    "ders_adi_en": "Spacecraft Systems Design II"
   },
   {
     "id": 34,
     "kod": "UZB",
     "no": "421E",
-    "ders_adi": "Yönelim Belirleme ve Kontrol Sis.",
+    "ders_adi": "Yönelim Belirleme ve Kontrol Sistemleri",
     "ogretim_uyesi": "Demet Çilden Güler",
     "donem": "Bahar",
     "yil": "2024-2025",
@@ -463,14 +463,14 @@
     "id": 36,
     "kod": "UZB",
     "no": "451E",
-    "ders_adi": "Uzay Aracı İletişimi",
+    "ders_adi": "Uzay Aracı Haberleşmesi",
     "ogretim_uyesi": "Erdem Onur Özyurt",
     "donem": "Bahar",
     "yil": "2024-2025",
     "kategori": "Bölüm Dersleri",
     "renk_kodu": "#4688F4",
     "drive_link": "https://drive.google.com/...",
-    "ders_adi_en": "Spacecraft Communication"
+    "ders_adi_en": "Spacecraft Communications"
   },
   {
     "id": 37,
@@ -528,40 +528,40 @@
     "id": 41,
     "kod": "ING",
     "no": "100",
-    "ders_adi": "Küresel Hedefler için İngilizce",
+    "ders_adi": "Küresel Hedefler Üzerinden Akademik İngilizce",
     "ogretim_uyesi": "Yasemin Yılmaz Yüksek",
     "donem": "Güz",
     "yil": "2022-2023",
     "kategori": "Dil + İnsan Toplum Bilimleri (İTB) Dersleri",
     "renk_kodu": "#A479E2",
     "drive_link": "https://drive.google.com/...",
-    "ders_adi_en": "English for Global Goals"
+    "ders_adi_en": "EAP Through Global Goals"
   },
   {
     "id": 42,
     "kod": "ING",
     "no": "112A",
-    "ders_adi": "Akademik Yazının Temelleri",
+    "ders_adi": "Akademik Yazımın Temelleri",
     "ogretim_uyesi": "Nilgün Eker",
     "donem": "Bahar",
     "yil": "2022-2023",
     "kategori": "Dil + İnsan Toplum Bilimleri (İTB) Dersleri",
     "renk_kodu": "#A479E2",
     "drive_link": "https://drive.google.com/...",
-    "ders_adi_en": "Fundamentals of Academic Writing"
+    "ders_adi_en": "Basics of Academic Writing"
   },
   {
     "id": 43,
     "kod": "ING",
     "no": "201A",
-    "ders_adi": "İngilizce Araştırma Yazısı",
+    "ders_adi": "Araştırma Makalesi Yazımının Temelleri",
     "ogretim_uyesi": "Canan Sağbilge",
     "donem": "Bahar",
     "yil": "2023-2024",
     "kategori": "Dil + İnsan Toplum Bilimleri (İTB) Dersleri",
     "renk_kodu": "#A479E2",
     "drive_link": "https://drive.google.com/...",
-    "ders_adi_en": "English Research Writing"
+    "ders_adi_en": "Essentials of Research Paper Writing"
   },
   {
     "id": 44,
@@ -606,14 +606,14 @@
     "id": 47,
     "kod": "UCK",
     "no": "348E",
-    "ders_adi": "Mühendislikte Hesaplamalı Uygulamalar",
+    "ders_adi": "Mühendislikte Bilgisayar Uygulamaları",
     "ogretim_uyesi": "Bülent Tutkun",
     "donem": "Güz",
     "yil": "2025-2026",
     "kategori": "Temel Mühendislik (TM) Dersleri",
     "renk_kodu": "#783F04",
     "drive_link": "https://drive.google.com/...",
-    "ders_adi_en": "Computational Applications in Engineering"
+    "ders_adi_en": "Computer Applications in Engineering"
   },
   {
     "id": 48,

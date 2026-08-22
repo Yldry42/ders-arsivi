@@ -166,7 +166,7 @@ html[data-theme="dark"] {
 
 html {
   scrollbar-gutter: stable;
-  transition: background-color 300ms ease-in-out, color 300ms ease-in-out;
+  transition: background-color 140ms ease-out, color 140ms ease-out;
 }
 
 html.dark,
@@ -212,7 +212,7 @@ html[data-theme="light"] body {
 
 /* Smooth button transitions */
 button {
-  transition-property: all;
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -220,5 +220,5 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-  transition: background-color 300ms ease-in-out, color 300ms ease-in-out;
+  transition: background-color 140ms ease-out, color 140ms ease-out;
 }

@@ -1,0 +1,661 @@
+[
+  {
+    "ders_kodu": "FIZ101E",
+    "ders_adi": "Fizik I",
+    "akademisyen": "Kazım Yavuz Ekşi",
+    "yil": "2022-2023",
+    "donem": "Güz",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "***"
+    ],
+    "snapshot": "2023-01-27",
+    "obs": {
+      "yil": "2022-2023",
+      "donem": "Güz Dönemi",
+      "toplam": 2917
+    }
+  },
+  {
+    "ders_kodu": "FIZ101EL",
+    "ders_adi": "Fizik I Laboratuvarı",
+    "akademisyen": "-",
+    "yil": "2022-2023",
+    "donem": "Güz",
+    "guven": "medium",
+    "sebep": "Dönem arşiv snapshotında ders yok; dersler.json hocası kullanılacak.",
+    "arsiv_hocalari": [],
+    "snapshot": null,
+    "obs": {
+      "yil": "2022-2023",
+      "donem": "Güz Dönemi",
+      "toplam": 2917
+    }
+  },
+  {
+    "ders_kodu": "FIZ102E",
+    "ders_adi": "Fizik II",
+    "akademisyen": "Kazım Yavuz Ekşi",
+    "yil": "2022-2023",
+    "donem": "Bahar",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "***"
+    ],
+    "snapshot": "2023-02-02",
+    "obs": {
+      "yil": "2022-2023",
+      "donem": "Bahar Dönemi",
+      "toplam": 3280
+    }
+  },
+  {
+    "ders_kodu": "FIZ102EL",
+    "ders_adi": "Fizik II Laboratuvarı",
+    "akademisyen": "-",
+    "yil": "2022-2023",
+    "donem": "Bahar",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "***"
+    ],
+    "snapshot": "2023-02-02",
+    "obs": {
+      "yil": "2022-2023",
+      "donem": "Bahar Dönemi",
+      "toplam": 3280
+    }
+  },
+  {
+    "ders_kodu": "KIM101E",
+    "ders_adi": "Genel Kimya I",
+    "akademisyen": "Fuat Topuz",
+    "yil": "2022-2023",
+    "donem": "Güz",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "***"
+    ],
+    "snapshot": "2023-01-27",
+    "obs": {
+      "yil": "2022-2023",
+      "donem": "Güz Dönemi",
+      "toplam": 2282
+    }
+  },
+  {
+    "ders_kodu": "MAT103E",
+    "ders_adi": "Matematik I",
+    "akademisyen": "Sevgi Harman",
+    "yil": "2022-2023",
+    "donem": "Güz",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "***"
+    ],
+    "snapshot": "2023-01-27",
+    "obs": {
+      "yil": "2022-2023",
+      "donem": "Güz Dönemi",
+      "toplam": 3165
+    }
+  },
+  {
+    "ders_kodu": "MAT104E",
+    "ders_adi": "Matematik II",
+    "akademisyen": "Nurhan Çolakoğlu",
+    "yil": "2022-2023",
+    "donem": "Bahar",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "***"
+    ],
+    "snapshot": "2023-02-02",
+    "obs": {
+      "yil": "2022-2023",
+      "donem": "Bahar Dönemi",
+      "toplam": 1959
+    }
+  },
+  {
+    "ders_kodu": "MAT104E",
+    "ders_adi": "Matematik II",
+    "akademisyen": "Gülçin Çivi Bilir",
+    "yil": "2023-2024",
+    "donem": "Güz",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "--",
+      "Sevgi Harman",
+      "Mehmet Ali Karaca",
+      "İbrahim Kırat"
+    ],
+    "snapshot": "2023-09-29",
+    "obs": {
+      "yil": "2023-2024",
+      "donem": "Güz Dönemi",
+      "toplam": 1704
+    }
+  },
+  {
+    "ders_kodu": "BIL110E",
+    "ders_adi": "Programlamaya Giriş - C",
+    "akademisyen": "Egnar Özdikililer",
+    "yil": "2022-2023",
+    "donem": "Güz",
+    "guven": "medium",
+    "sebep": "Dönem arşiv snapshotında ders yok; dersler.json hocası kullanılacak.",
+    "arsiv_hocalari": [],
+    "snapshot": null,
+    "obs": {
+      "yil": "2022-2023",
+      "donem": "Güz Dönemi",
+      "toplam": 333
+    }
+  },
+  {
+    "ders_kodu": "DNK201E",
+    "ders_adi": "Dinamik",
+    "akademisyen": "Bülent Tutkun",
+    "yil": "2023-2024",
+    "donem": "Güz",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "Akif Kutlu",
+      "Abdul Hayır",
+      "Bülent Tutkun",
+      "Cemil Kurtcebe",
+      "Ceren Bilgin Güney",
+      "Osman Bulut"
+    ],
+    "snapshot": "2023-09-29",
+    "obs": {
+      "yil": "2023-2024",
+      "donem": "Güz Dönemi",
+      "toplam": 574
+    }
+  },
+  {
+    "ders_kodu": "MAT201E",
+    "ders_adi": "Diferansiyel Denklemler",
+    "akademisyen": "Oğuzcan İnal",
+    "yil": "2023-2024",
+    "donem": "Güz",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "Seher Eken"
+    ],
+    "snapshot": "2023-09-29",
+    "obs": {
+      "yil": "2023-2024",
+      "donem": "Güz Dönemi",
+      "toplam": 189
+    }
+  },
+  {
+    "ders_kodu": "MAT202E",
+    "ders_adi": "Sayısal Yöntemler",
+    "akademisyen": "Aytaç Arıkoğlu",
+    "yil": "2023-2024",
+    "donem": "Bahar",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "İhsan Burak Kulga",
+      "Bahtiyar Efe",
+      "Zehra Elif Batman",
+      "İkilem Göcek",
+      "Bülent Tutkun",
+      "İpek Yalçın Eniş",
+      "Aytaç Arıkoğlu",
+      "Mustafa Emin Demirbağ"
+    ],
+    "snapshot": "2024-04-15",
+    "obs": {
+      "yil": "2023-2024",
+      "donem": "Bahar Dönemi",
+      "toplam": 569
+    }
+  },
+  {
+    "ders_kodu": "MUK211E",
+    "ders_adi": "Mukavemet",
+    "akademisyen": "Aytaç Arıkoğlu",
+    "yil": "2023-2024",
+    "donem": "Güz",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "Demet Balkan",
+      "Aytaç Arıkoğlu"
+    ],
+    "snapshot": "2024-01-15",
+    "obs": {
+      "yil": "2023-2024",
+      "donem": "Güz Dönemi",
+      "toplam": 195
+    }
+  },
+  {
+    "ders_kodu": "STA201E",
+    "ders_adi": "Statik",
+    "akademisyen": "Cuma Yarım",
+    "yil": "2022-2023",
+    "donem": "Bahar",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "Kaan Yıldız",
+      "Cuma Yarım"
+    ],
+    "snapshot": "2023-04-15",
+    "obs": {
+      "yil": "2022-2023",
+      "donem": "Bahar Dönemi",
+      "toplam": 316
+    }
+  },
+  {
+    "ders_kodu": "UCK303E",
+    "ders_adi": "Otomatik Kontrol",
+    "akademisyen": "Emre Koyuncu",
+    "yil": "2024-2025",
+    "donem": "Güz",
+    "guven": "medium",
+    "sebep": "Dönem arşiv snapshotında ders yok; dersler.json hocası kullanılacak.",
+    "arsiv_hocalari": [],
+    "snapshot": null,
+    "obs": {
+      "yil": "2024-2025",
+      "donem": "Güz Dönemi",
+      "toplam": 163
+    }
+  },
+  {
+    "ders_kodu": "UCK304E",
+    "ders_adi": "Deneysel Mühendislik",
+    "akademisyen": "Tahir Soyugüzel",
+    "yil": "2024-2025",
+    "donem": "Bahar",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "Halit Süleyman Türkmen",
+      "Tahir Soyugüzel",
+      "Duygu Erdem",
+      "Demet Balkan",
+      "Saliha Banu Yılmaz"
+    ],
+    "snapshot": "2025-05-14",
+    "obs": {
+      "yil": "2024-2025",
+      "donem": "Bahar Dönemi",
+      "toplam": 154
+    }
+  },
+  {
+    "ders_kodu": "UCK305E",
+    "ders_adi": "Aerodinamik",
+    "akademisyen": "Aydın Mısırlıoğlu",
+    "yil": "2024-2025",
+    "donem": "Güz",
+    "guven": "medium",
+    "sebep": "Dönem arşiv snapshotında ders yok; dersler.json hocası kullanılacak.",
+    "arsiv_hocalari": [],
+    "snapshot": null,
+    "obs": {
+      "yil": "2024-2025",
+      "donem": "Güz Dönemi",
+      "toplam": 195
+    }
+  },
+  {
+    "ders_kodu": "UZB220E",
+    "ders_adi": "Mekanik Titreşimler",
+    "akademisyen": "Demet Balkan",
+    "yil": "2023-2024",
+    "donem": "Bahar",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "Özge Özdemir",
+      "Demet Balkan"
+    ],
+    "snapshot": "2024-04-15",
+    "obs": {
+      "yil": "2023-2024",
+      "donem": "Bahar Dönemi",
+      "toplam": 208
+    }
+  },
+  {
+    "ders_kodu": "UZB301E",
+    "ders_adi": "Ölçme Tekniği",
+    "akademisyen": "Okşan Çetiner",
+    "yil": "2024-2025",
+    "donem": "Güz",
+    "guven": "medium",
+    "sebep": "Dönem arşiv snapshotında ders yok; dersler.json hocası kullanılacak.",
+    "arsiv_hocalari": [],
+    "snapshot": null,
+    "obs": {
+      "yil": "2024-2025",
+      "donem": "Güz Dönemi",
+      "toplam": 206
+    }
+  },
+  {
+    "ders_kodu": "UZB310E",
+    "ders_adi": "Sıkıştırılabilir Aerodinamik",
+    "akademisyen": "Aydın Mısırlıoğlu",
+    "yil": "2024-2025",
+    "donem": "Bahar",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "Bayram Çelik",
+      "Aydın Mısırlıoğlu",
+      "Melike Nikbay"
+    ],
+    "snapshot": "2025-05-14",
+    "obs": {
+      "yil": "2024-2025",
+      "donem": "Bahar Dönemi",
+      "toplam": 164
+    }
+  },
+  {
+    "ders_kodu": "UZB314E",
+    "ders_adi": "Isı Geçişi",
+    "akademisyen": "Bülent Tutkun",
+    "yil": "2024-2025",
+    "donem": "Bahar",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "Bülent Tutkun",
+      "Cemil Kurtcebe",
+      "Onur Tunçer"
+    ],
+    "snapshot": "2025-05-14",
+    "obs": {
+      "yil": "2024-2025",
+      "donem": "Bahar Dönemi",
+      "toplam": 216
+    }
+  },
+  {
+    "ders_kodu": "UZB352E",
+    "ders_adi": "Yörünge Mekaniği",
+    "akademisyen": "Demet Çilden Güler",
+    "yil": "2024-2025",
+    "donem": "Güz",
+    "guven": "medium",
+    "sebep": "Dönem arşiv snapshotında ders yok; dersler.json hocası kullanılacak.",
+    "arsiv_hocalari": [],
+    "snapshot": null,
+    "obs": {
+      "yil": "2024-2025",
+      "donem": "Güz Dönemi",
+      "toplam": 111
+    }
+  },
+  {
+    "ders_kodu": "UZB411E",
+    "ders_adi": "Uzay Ortamı",
+    "akademisyen": "Zerefşan Kaymaz",
+    "yil": "2024-2025",
+    "donem": "Güz",
+    "guven": "medium",
+    "sebep": "Dönem arşiv snapshotında ders yok; dersler.json hocası kullanılacak.",
+    "arsiv_hocalari": [],
+    "snapshot": null,
+    "obs": {
+      "yil": "2024-2025",
+      "donem": "Güz Dönemi",
+      "toplam": 96
+    }
+  },
+  {
+    "ders_kodu": "ATA121",
+    "ders_adi": "Atatürk İlkeleri ve İnkılap Tarihi I",
+    "akademisyen": "Sait Kofoğlu",
+    "yil": "2023-2024",
+    "donem": "Güz",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "Yusuf Ziya Altıntaş",
+      "İsmail Kandil",
+      "Serhat Aslaner",
+      "Emin Alp Malkoç",
+      "Burcu Kurt",
+      "Çağdaş Taylan Salın",
+      "--",
+      "Serap Sarıhan",
+      "Necdet Öz",
+      "Pelin Helvacı",
+      "Sait Kofoğlu"
+    ],
+    "snapshot": "2024-01-15",
+    "obs": {
+      "yil": "2023-2024",
+      "donem": "Güz Dönemi",
+      "toplam": 2058
+    }
+  },
+  {
+    "ders_kodu": "ATA122",
+    "ders_adi": "Atatürk İlkeleri ve İnkılap Tarihi II",
+    "akademisyen": "Pelin Helvacı",
+    "yil": "2025-2026",
+    "donem": "Güz",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "Emin Alp Malkoç",
+      "Burcu Kurt",
+      "Serap Sarıhan",
+      "Necdet Öz",
+      "İsmail Kandil",
+      "Pelin Helvacı",
+      "Barış Ertem",
+      "Çağdaş Taylan Salın",
+      "Yusuf Ziya Altıntaş",
+      "Sait Kofoğlu"
+    ],
+    "snapshot": "2026-01-02",
+    "obs": {
+      "yil": "2025-2026",
+      "donem": "Güz Dönemi",
+      "toplam": 1544
+    }
+  },
+  {
+    "ders_kodu": "TUR121",
+    "ders_adi": "Türk Dili I",
+    "akademisyen": "Timur Aydın",
+    "yil": "2023-2024",
+    "donem": "Güz",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "Gülsün Nakıboğlu",
+      "Timur Aydın",
+      "Abdullah Esen",
+      "Aslı Kantarcı",
+      "Ömer Tacir",
+      "Sinan Çakır",
+      "Hamide Aliyazıcıoğlu",
+      "--",
+      "Özlem Kara",
+      "Muhsin Kadıoğlu"
+    ],
+    "snapshot": "2023-10-15",
+    "obs": {
+      "yil": "2023-2024",
+      "donem": "Güz Dönemi",
+      "toplam": 2732
+    }
+  },
+  {
+    "ders_kodu": "TUR122",
+    "ders_adi": "Türk Dili II",
+    "akademisyen": "Aslı Kantarcı",
+    "yil": "2023-2024",
+    "donem": "Bahar",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "Timur Aydın",
+      "Gülsün Nakıboğlu",
+      "Aslı Kantarcı",
+      "Ömer Tacir",
+      "Abdullah Esen",
+      "Cemile Rümeysa Mehanı",
+      "İnci Pamuk",
+      "Özlem Kara",
+      "Miraç Erten",
+      "--",
+      "Sinan Çakır"
+    ],
+    "snapshot": "2024-04-15",
+    "obs": {
+      "yil": "2023-2024",
+      "donem": "Bahar Dönemi",
+      "toplam": 2675
+    }
+  },
+  {
+    "ders_kodu": "ING100",
+    "ders_adi": "Küresel Hedefler Üzerinden Akademik İngilizce",
+    "akademisyen": "Yasemin Yılmaz Yüksek",
+    "yil": "2022-2023",
+    "donem": "Güz",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "***"
+    ],
+    "snapshot": "2023-01-27",
+    "obs": {
+      "yil": "2022-2023",
+      "donem": "Güz Dönemi",
+      "toplam": 2623
+    }
+  },
+  {
+    "ders_kodu": "ING112A",
+    "ders_adi": "Akademik Yazımın Temelleri",
+    "akademisyen": "Nilgün Eker",
+    "yil": "2022-2023",
+    "donem": "Bahar",
+    "durum": "OBS dağılımı bulunamadı."
+  },
+  {
+    "ders_kodu": "ING201A",
+    "ders_adi": "Araştırma Makalesi Yazımının Temelleri",
+    "akademisyen": "Canan Sağbilge",
+    "yil": "2023-2024",
+    "donem": "Bahar",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "--",
+      "Özlem Ayar Gemalmaz",
+      "Mehtap İpek Kurt",
+      "Esbie van Heerden",
+      "Şule Elif Gökçe Enginarlar",
+      "Gamze Avcı",
+      "Hatice Gülru Arslan",
+      "Emel Çağlar",
+      "Duygu Özkan",
+      "Aslıhan Zengin",
+      "Suzan Arıman",
+      "Nilgün Eker",
+      "Yeşim Kılıç",
+      "Meryem Simge Çengel Avcu",
+      "Canan Sağbilge",
+      "Tim Davis",
+      "Nurçin Ramadanoğlu",
+      "Merve Sevtap Süren",
+      "Aslı Özkara",
+      "Dilek Öztürk",
+      "Özlem Kurnaz"
+    ],
+    "snapshot": "2024-01-15",
+    "obs": {
+      "yil": "2023-2024",
+      "donem": "Bahar Dönemi",
+      "toplam": 28
+    }
+  },
+  {
+    "ders_kodu": "ITB228E",
+    "ders_adi": "Toplumsal Cinsiyet Çalışmaları",
+    "akademisyen": "Ayşe Zeynep Akalın Özdemir",
+    "yil": "2024-2025",
+    "donem": "Güz",
+    "guven": "medium",
+    "sebep": "Dönem arşiv snapshotında ders yok; dersler.json hocası kullanılacak.",
+    "arsiv_hocalari": [],
+    "snapshot": null,
+    "obs": {
+      "yil": "2024-2025",
+      "donem": "Güz Dönemi",
+      "toplam": 91
+    }
+  },
+  {
+    "ders_kodu": "SNT211E",
+    "ders_adi": "İstanbul: Tarih, Sanat ve Top.",
+    "akademisyen": "Çiğdem Özkan Aygün",
+    "yil": "2024-2025",
+    "donem": "Güz",
+    "guven": "medium",
+    "sebep": "Dönem arşiv snapshotında ders yok; dersler.json hocası kullanılacak.",
+    "arsiv_hocalari": [],
+    "snapshot": null,
+    "obs": {
+      "yil": "2024-2025",
+      "donem": "Güz Dönemi",
+      "toplam": 201
+    }
+  },
+  {
+    "ders_kodu": "FIZ201E",
+    "ders_adi": "Modern Fizik",
+    "akademisyen": "Mehmet Murat Sunar",
+    "yil": "2025-2026",
+    "donem": "Güz",
+    "guven": "review",
+    "sebep": "Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.",
+    "arsiv_hocalari": [
+      "Mehmet Murat Sunar",
+      "Onur Ergen"
+    ],
+    "snapshot": "2026-01-02",
+    "obs": {
+      "yil": "2025-2026",
+      "donem": "Güz Dönemi",
+      "toplam": 245
+    }
+  },
+  {
+    "ders_kodu": "UUM511",
+    "ders_adi": "Viskoz Akış",
+    "akademisyen": "Duygu Erdem",
+    "yil": "2025-2026",
+    "donem": "Güz",
+    "durum": "OBS dağılımı bulunamadı."
+  }
+]

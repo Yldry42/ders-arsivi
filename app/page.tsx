@@ -437,12 +437,35 @@ const getFileExtension = (fileName: string) => {
   return extension ? extension.toLowerCase() : '';
 };
 
+const pdfPreviewExtensions = ['pdf'];
+const textPreviewExtensions = ['txt', 'md', 'csv'];
+const imagePreviewExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'];
+const officePreviewExtensions = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+
+const getPdfPreviewSource = (previewUrl: string, zoom: number, searchQuery: string) => {
+  const params = [`toolbar=0`, `navpanes=0`, `zoom=${zoom}`];
+  const query = searchQuery.trim();
+  if (query) params.push(`search=${encodeURIComponent(query)}`);
+  return `${previewUrl}#${params.join('&')}`;
+};
+
+const getOfficePreviewSource = (previewUrl: string) => {
+  if (typeof window === 'undefined') return '';
+  const absolutePreviewUrl = new URL(previewUrl, window.location.origin).toString();
+  return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(absolutePreviewUrl)}`;
+};
+
 const getArchiveTerm = (path: string, language: 'tr' | 'en') => {
   const normalizedPath = path.toLowerCase();
   if (/(^|[\\/ ])fall|güz|guz/.test(normalizedPath)) return language === 'tr' ? 'Güz' : 'Fall';
   if (/(^|[\\/ ])spring|bahar/.test(normalizedPath)) return language === 'tr' ? 'Bahar' : 'Spring';
   if (/(^|[\\/ ])summer|yaz/.test(normalizedPath)) return language === 'tr' ? 'Yaz' : 'Summer';
   return language === 'tr' ? 'Dönemsiz' : 'No term';
+};
+
+const formatTermLabel = (term: string | undefined, language: 'tr' | 'en') => {
+  if (!term) return '';
+  return getArchiveTerm(term, language);
 };
 
 const getArchiveFileIcon = (extension: string) => {
@@ -479,7 +502,6 @@ export default function Home() {
   const [language, setLanguage] = useState<'tr' | 'en'>('tr');
   const locale = translate[language];
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [isThemeChanging, setIsThemeChanging] = useState(false);
   const [isLanguageChanging, setIsLanguageChanging] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -586,6 +608,7 @@ export default function Home() {
   const [openArchiveFolders, setOpenArchiveFolders] = useState<Record<string, boolean>>({});
   const [archivePreview, setArchivePreview] = useState<ArsivOnizleme | null>(null);
   const [archivePreviewZoom, setArchivePreviewZoom] = useState(100);
+  const [archivePreviewSearch, setArchivePreviewSearch] = useState('');
   const [isArchivePreviewClosing, setIsArchivePreviewClosing] = useState(false);
   const [isHeaderPinned, setIsHeaderPinned] = useState(false);
   const headerSentinelRef = useRef<HTMLDivElement | null>(null);
@@ -691,6 +714,7 @@ export default function Home() {
 
   useEffect(() => {
     setArchivePreviewZoom(100);
+    setArchivePreviewSearch('');
     setIsArchivePreviewClosing(false);
   }, [archivePreview]);
 
@@ -766,6 +790,38 @@ export default function Home() {
   const compareCourseAlphabetically = (left: Ders, right: Ders) =>
     `${left.kod}${left.no}`.localeCompare(`${right.kod}${right.no}`, 'tr', { numeric: true }) ||
     left.ders_adi.localeCompare(right.ders_adi, 'tr');
+
+  const getCourseDisplayName = (course: Ders | undefined, fallback?: string) =>
+    language === 'en' && course?.ders_adi_en ? course.ders_adi_en : course?.ders_adi ?? fallback ?? '';
+
+  const formatGradeDistributionTitle = (entry: HarfNotuDagilimi) => {
+    if (entry.baslik) return entry.baslik;
+    const entryCourse = dersList.find((course) => entry.ders_kodu && normalizeArchiveToken(`${course.kod}${course.no}`) === normalizeArchiveToken(entry.ders_kodu));
+    const courseName = getCourseDisplayName(entryCourse, entry.ders_adi);
+    return [entry.ders_kodu, courseName].filter(Boolean).join(' · ');
+  };
+
+  const formatGradeDistributionMeta = (entry: HarfNotuDagilimi) => {
+    const metaParts = [entry.yil, formatTermLabel(entry.donem, language)].filter(Boolean);
+    const translatedTag = formatTermLabel(entry.etiket, language);
+    if (translatedTag && normalizeArchiveToken(translatedTag) !== normalizeArchiveToken(formatTermLabel(entry.donem, language))) {
+      metaParts.push(translatedTag);
+    }
+    return metaParts.join(' · ');
+  };
+
+  const getAcademicFacultyLabel = (academic: Akademisyen & { hasCommonCourse?: boolean }) => {
+    if (academic.hasCommonCourse || academic.fakulte === translate.tr.commonFaculty) {
+      return language === 'tr' ? translate.tr.commonFaculty : 'Faculty of Science and Letters';
+    }
+
+    const faculty = academic.fakulte ?? translate.tr.defaultFaculty;
+    if (faculty === translate.tr.defaultFaculty) {
+      return language === 'tr' ? translate.tr.defaultFaculty : 'Faculty of Aeronautics and Astronautics';
+    }
+
+    return faculty;
+  };
 
   const getCourseOfferings = (course: Ders) =>
     dersList
@@ -1137,10 +1193,15 @@ export default function Home() {
           const labels = Array.from(new Set([...gradeOrder, ...Object.keys(entry.dagilim)])).filter((label) => typeof entry.dagilim[label] === 'number');
           const maxCount = Math.max(...labels.map((label) => Number(entry.dagilim[label] ?? 0)), 1);
           const totalCount = labels.reduce((total, label) => total + Number(entry.dagilim[label] ?? 0), 0);
+          const isCompactGradeSet = labels.length <= 11;
+          const gradeGridStyle: CSSProperties = {
+            gridTemplateColumns: `repeat(${labels.length}, minmax(0, 1fr))`,
+          };
           const title = entry.baslik ?? [entry.ders_kodu, entry.ders_adi].filter(Boolean).join(' · ');
-          const metaParts = [entry.yil, entry.donem].filter(Boolean);
+          const displayTitle = formatGradeDistributionTitle(entry);
+          const metaParts = [entry.yil, formatTermLabel(entry.donem, language)].filter(Boolean);
           if (entry.etiket && normalizeArchiveToken(entry.etiket) !== normalizeArchiveToken(entry.donem ?? '')) {
-            metaParts.push(entry.etiket);
+            metaParts.push(formatTermLabel(entry.etiket, language));
           }
           const meta = metaParts.join(' · ');
 
@@ -1149,7 +1210,7 @@ export default function Home() {
 
           return (
             <article
-              key={`${animationKey}-${title || 'distribution'}-${meta}-${index}`}
+              key={`${animationKey}-${displayTitle || 'distribution'}-${meta}-${index}`}
               className={`animate-grade-chart rounded-3xl border p-4 shadow-sm ${
                 variant === 'plain'
                   ? 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950'
@@ -1157,11 +1218,11 @@ export default function Home() {
               }`}
             >
               <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-                {title || meta ? (
+                {displayTitle || meta ? (
                   <div className="min-w-0">
-                    {title ? (
+                    {displayTitle ? (
                       <p className="text-sm font-semibold leading-6">
-                        {title}
+                        {displayTitle}
                       </p>
                     ) : null}
                     {meta ? (
@@ -1181,22 +1242,22 @@ export default function Home() {
                   {totalCount} {language === 'tr' ? 'öğrenci' : 'students'}
                 </span>
               </div>
-              <div className="mt-5 grid grid-cols-5 gap-2 sm:grid-cols-8 lg:grid-cols-[repeat(15,minmax(0,1fr))]">
+              <div className={`mt-5 grid ${isCompactGradeSet ? 'gap-3' : 'gap-2'}`} style={gradeGridStyle}>
                 {labels.map((label, labelIndex) => {
                   const count = Number(entry.dagilim[label] ?? 0);
                   const percentage = (count / maxCount) * 100;
                   const totalPercentage = totalCount ? (count / totalCount) * 100 : 0;
-                  const height = Math.max(10, percentage);
+                  const height = count === 0 ? 0 : Math.max(7, percentage);
 
                   return (
-                    <div key={`${animationKey}-${title}-${meta}-${label}`} className="flex min-w-0 flex-col items-center gap-1.5 text-[11px]">
+                    <div key={`${animationKey}-${displayTitle}-${meta}-${label}`} className="flex min-w-0 flex-col items-center gap-1.5 text-[11px]">
                       <div
-                        className="flex h-20 w-full max-w-11 items-end overflow-hidden rounded-2xl p-1"
+                        className={`flex w-full items-end overflow-hidden rounded-2xl p-1 ${isCompactGradeSet ? 'h-24 max-w-16' : 'h-20 max-w-11'}`}
                         style={{ backgroundColor: `${chartColor}22` }}
                         title={`${label}: ${count} (${totalPercentage.toFixed(1)}%)`}
                       >
                         <div
-                          className="animate-grade-bar w-full rounded-xl shadow-sm transition-all duration-300"
+                          className={`animate-grade-bar w-full rounded-xl shadow-sm transition-all duration-300 ${count === 0 ? 'opacity-0 shadow-none' : ''}`}
                           style={{
                             height: `${height}%`,
                             backgroundColor: `${chartColor}cc`,
@@ -1333,15 +1394,34 @@ export default function Home() {
       );
     };
 
-    const countArchiveNodeFiles = (node: ArchiveFolderNode): number =>
-      node.files.length + Object.values(node.folders).reduce((total, childNode) => total + countArchiveNodeFiles(childNode), 0);
+    const formatArchiveNodeSummary = (folderCount: number, fileCount: number) => {
+      const parts: string[] = [];
+
+      if (folderCount > 0) {
+        parts.push(
+          language === 'tr'
+            ? `${folderCount} klasör`
+            : `${folderCount} ${folderCount === 1 ? 'folder' : 'folders'}`,
+        );
+      }
+
+      if (fileCount > 0) {
+        parts.push(
+          language === 'tr'
+            ? `${fileCount} dosya`
+            : `${fileCount} ${fileCount === 1 ? 'file' : 'files'}`,
+        );
+      }
+
+      return parts.length > 0 ? parts.join(' · ') : language === 'tr' ? 'Boş klasör' : 'Empty folder';
+    };
 
     const renderArchiveFolderNode = (node: ArchiveFolderNode, parentKey = '', depth = 0): ReactNode => {
       const folderKey = `${ders.id}-${activeYear}-${activeTerm ?? 'all'}-${parentKey}-${node.name}`;
       const isFolderOpen = Boolean(openArchiveFolders[folderKey]);
       const childFolders = Object.values(node.folders).sort(compareArchiveFolders);
       const nodeFiles = [...node.files].sort(compareArchiveFiles);
-      const fileCount = countArchiveNodeFiles(node);
+      const folderSummary = formatArchiveNodeSummary(childFolders.length, nodeFiles.length);
 
       return (
         <div
@@ -1369,7 +1449,7 @@ export default function Home() {
                   {node.name}
                 </span>
                 <span className="mt-0.5 block text-xs opacity-70" style={{ color: textColor }}>
-                  {fileCount} {language === 'tr' ? 'dosya' : fileCount === 1 ? 'file' : 'files'}
+                  {folderSummary}
                 </span>
               </span>
             </span>
@@ -1688,13 +1768,7 @@ export default function Home() {
                   <span className={`absolute left-1 top-1 z-0 h-8 w-8 rounded-full transition-transform duration-300 ease-out sm:h-9 sm:w-9 ${theme === 'light' ? 'translate-x-0 bg-amber-400' : 'translate-x-8 bg-[var(--foreground)] sm:translate-x-9'}`} />
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsThemeChanging(true);
-                      setTimeout(() => {
-                        setThemeMode('light');
-                        setIsThemeChanging(false);
-                      }, 150);
-                    }}
+                    onClick={() => setThemeMode('light')}
                     className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full transition-colors duration-200 sm:h-9 sm:w-9 ${theme === 'light' ? 'text-white' : 'text-[var(--foreground)] opacity-75 hover:opacity-100'}`}
                     aria-label="Light mode"
                   >
@@ -1702,13 +1776,7 @@ export default function Home() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsThemeChanging(true);
-                      setTimeout(() => {
-                        setThemeMode('dark');
-                        setIsThemeChanging(false);
-                      }, 150);
-                    }}
+                    onClick={() => setThemeMode('dark')}
                     className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full transition-colors duration-200 sm:h-9 sm:w-9 ${theme === 'dark' ? 'text-sky-400' : 'text-[var(--foreground)] opacity-75 hover:opacity-100'}`}
                     aria-label="Dark mode"
                   >
@@ -1988,7 +2056,7 @@ export default function Home() {
                   {selectedAcademic.ad}
                 </h2>
                 <p className="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400">
-                  {locale.facultyLabel}: {selectedAcademic.hasCommonCourse ? locale.commonFaculty : selectedAcademic.fakulte ?? locale.defaultFaculty}
+                  {locale.facultyLabel}: {getAcademicFacultyLabel(selectedAcademic)}
                 </p>
                 {selectedAcademic.aciklama ? (
                   <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
@@ -2052,8 +2120,8 @@ export default function Home() {
                 key: [entry.yil, entry.donem, entry.etiket].filter(Boolean).join('||'),
                 label: [
                   entry.yil,
-                  entry.donem,
-                  entry.etiket && normalizeArchiveToken(entry.etiket) !== normalizeArchiveToken(entry.donem ?? '') ? entry.etiket : null,
+                  formatTermLabel(entry.donem, language),
+                  entry.etiket && normalizeArchiveToken(entry.etiket) !== normalizeArchiveToken(entry.donem ?? '') ? formatTermLabel(entry.etiket, language) : null,
                 ].filter(Boolean).join(' · '),
               }));
               const activeGradePeriod =
@@ -2147,9 +2215,9 @@ export default function Home() {
                         {getCategoryShortLabel(ders.kategori, language)}
                       </span>
                     </div>
-                    <p className="mt-1 text-sm text-slate-700 dark:text-slate-200">{ders.ders_adi}</p>
+                    <p className="mt-1 text-sm text-slate-700 dark:text-slate-200">{getCourseDisplayName(ders)}</p>
                     <p className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                      {ders.yil} · {ders.donem}
+                      {ders.yil} · {formatTermLabel(ders.donem, language)}
                     </p>
                   </button>
                 ))}
@@ -2488,8 +2556,8 @@ export default function Home() {
                           key: [entry.yil, entry.donem, entry.etiket].filter(Boolean).join('||'),
                           label: [
                             entry.yil,
-                            entry.donem,
-                            entry.etiket && normalizeArchiveToken(entry.etiket) !== normalizeArchiveToken(entry.donem ?? '') ? entry.etiket : null,
+                            formatTermLabel(entry.donem, language),
+                            entry.etiket && normalizeArchiveToken(entry.etiket) !== normalizeArchiveToken(entry.donem ?? '') ? formatTermLabel(entry.etiket, language) : null,
                           ].filter(Boolean).join(' · '),
                         }));
                         const activePeriod =
@@ -2632,7 +2700,31 @@ export default function Home() {
                 </p>
               </div>
               <div className="flex shrink-0 flex-wrap items-center gap-2">
-                {['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(archivePreview.uzanti) ? (
+                {archivePreview.uzanti === 'pdf' ? (
+                  <label className="relative h-11 min-w-[12rem] flex-1 sm:flex-none">
+                    <span className="sr-only">{language === 'tr' ? 'PDF içinde ara' : 'Search in PDF'}</span>
+                    <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" viewBox="0 0 24 24" fill="none" aria-hidden>
+                      <path d="m21 21-4.35-4.35M10.75 18a7.25 7.25 0 1 1 0-14.5 7.25 7.25 0 0 1 0 14.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                    <input
+                      value={archivePreviewSearch}
+                      onChange={(event) => setArchivePreviewSearch(event.target.value)}
+                      placeholder={language === 'tr' ? 'PDF içinde ara...' : 'Search PDF...'}
+                      className="h-11 w-full rounded-full border border-slate-200 bg-slate-50/90 px-9 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:ring-2 focus:ring-slate-300 dark:border-slate-700 dark:bg-slate-950/90 dark:text-white dark:focus:ring-slate-600"
+                    />
+                    {archivePreviewSearch ? (
+                      <button
+                        type="button"
+                        onClick={() => setArchivePreviewSearch('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-700 dark:hover:text-slate-200"
+                        aria-label={language === 'tr' ? 'Aramayı temizle' : 'Clear search'}
+                      >
+                        ×
+                      </button>
+                    ) : null}
+                  </label>
+                ) : null}
+                {[...pdfPreviewExtensions, ...imagePreviewExtensions].includes(archivePreview.uzanti) ? (
                   <div className="flex h-11 items-center rounded-full border border-slate-200 bg-slate-50/90 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-950/90">
                     <button
                       type="button"
@@ -2669,13 +2761,13 @@ export default function Home() {
             </div>
 
             <div className="min-h-[72vh] flex-1 bg-slate-100 p-2 dark:bg-slate-950 sm:p-3">
-              {['pdf', 'txt', 'md', 'csv'].includes(archivePreview.uzanti) ? (
+              {[...pdfPreviewExtensions, ...textPreviewExtensions].includes(archivePreview.uzanti) ? (
                 <iframe
-                  src={archivePreview.uzanti === 'pdf' ? `${archivePreview.previewUrl}#toolbar=0&navpanes=0&zoom=${archivePreviewZoom}` : archivePreview.previewUrl}
+                  src={archivePreview.uzanti === 'pdf' ? getPdfPreviewSource(archivePreview.previewUrl, archivePreviewZoom, archivePreviewSearch) : archivePreview.previewUrl}
                   title={archivePreview.ad}
                   className="h-[76vh] w-full rounded-xl border border-slate-200 bg-white dark:border-slate-700"
                 />
-              ) : ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(archivePreview.uzanti) ? (
+              ) : imagePreviewExtensions.includes(archivePreview.uzanti) ? (
                 <div className="flex h-[76vh] items-center justify-center overflow-auto rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -2685,6 +2777,12 @@ export default function Home() {
                     style={{ transform: `scale(${archivePreviewZoom / 100})` }}
                   />
                 </div>
+              ) : officePreviewExtensions.includes(archivePreview.uzanti) ? (
+                <iframe
+                  src={getOfficePreviewSource(archivePreview.previewUrl)}
+                  title={archivePreview.ad}
+                  className="h-[76vh] w-full rounded-xl border border-slate-200 bg-white dark:border-slate-700"
+                />
               ) : (
                 <div className="flex h-[76vh] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-900">
                   <p className="max-w-md text-sm leading-6 text-slate-600 dark:text-slate-300">
