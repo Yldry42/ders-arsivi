@@ -378,6 +378,7 @@ const normalizeArchiveToken = (value: string) => value.replace(/[^a-zA-Z0-9]/g, 
 const debugArchiveMatches = process.env.NODE_ENV === 'development';
 
 const archivePublicBaseUrl = 'https://pub-9166db2e46694c818420c32e7545d40c.r2.dev';
+const productionArchiveApiUrl = 'https://ders-arsivi.vercel.app/api/archive';
 
 const courseArchiveAliases: Record<string, string[]> = {
   BIL110E: ['BIL110'],
@@ -539,8 +540,13 @@ export default function Home() {
 
     const loadArchiveFromR2 = async () => {
       try {
-        const response = await fetch('/api/archive');
-        if (!response.ok) return;
+        let response = await fetch('/api/archive').catch(() => null);
+
+        if (!response?.ok && typeof window !== 'undefined' && window.location.origin !== 'https://ders-arsivi.vercel.app') {
+          response = await fetch(productionArchiveApiUrl).catch(() => null);
+        }
+
+        if (!response?.ok) return;
 
         const data = (await response.json()) as ArsivDosyasi[];
         if (isActive && Array.isArray(data) && data.length > 0) {

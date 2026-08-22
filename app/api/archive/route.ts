@@ -10,6 +10,16 @@ const atlanacakDosyalar = new Set(['desktop.ini', 'thumbs.db', '.ds_store']);
 const previewRoot = '_previews/';
 const pdfPreviewSourceExtensions = new Set(['doc', 'docx', 'ppt', 'pptx']);
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: corsHeaders });
+}
+
 const encodeArchivePath = (path: string) =>
   path
     .split('/')
@@ -174,11 +184,12 @@ export async function GET() {
 
     return NextResponse.json(archiveItems, {
       headers: {
+        ...corsHeaders,
         'Cache-Control': 's-maxage=300, stale-while-revalidate=3600',
       },
     });
   } catch (error) {
     console.error('[Ders Arşivi] R2 archive listing failed:', error);
-    return NextResponse.json({ error: 'Archive could not be listed.' }, { status: 500 });
+    return NextResponse.json({ error: 'Archive could not be listed.' }, { status: 500, headers: corsHeaders });
   }
 }
