@@ -24,6 +24,8 @@ type PptxScrollViewerConstructor = new (
     paddingRight?: number;
     background?: string;
     pageShadow?: string | false;
+    dpr?: number;
+    useGoogleFonts?: boolean;
     mode?: 'main' | 'worker';
     onVisibleSlideChange?: (topIndex: number, total: number) => void;
     onScaleChange?: (scale: number) => void;
@@ -83,14 +85,19 @@ export default function PptxBrowserPreview({ fileName, fileUrl, previewUrl, zoom
         const buffer = await response.arrayBuffer();
         if (cancelled) return;
 
+        const viewerWidth = Math.max(720, Math.min(container.clientWidth - 36, 1280));
+
         const viewer = new PptxScrollViewer(container, {
+          width: viewerWidth,
           background: 'transparent',
-          gap: 28,
-          paddingTop: 24,
-          paddingBottom: 28,
-          paddingLeft: 18,
-          paddingRight: 18,
-          pageShadow: '0 18px 40px rgba(15, 23, 42, 0.16)',
+          gap: 18,
+          paddingTop: 18,
+          paddingBottom: 20,
+          paddingLeft: 12,
+          paddingRight: 12,
+          dpr: Math.min(window.devicePixelRatio || 1, 2),
+          useGoogleFonts: true,
+          pageShadow: '0 14px 34px rgba(15, 23, 42, 0.14)',
           mode: 'main',
           onVisibleSlideChange: (topIndex, total) => {
             if (!cancelled) setSlideInfo({ current: topIndex + 1, total });
@@ -156,7 +163,10 @@ export default function PptxBrowserPreview({ fileName, fileUrl, previewUrl, zoom
   }, [status, searchQuery]);
 
   return (
-    <div className="relative h-[76vh] overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-950">
+    <div
+      className="relative mx-auto w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-950"
+      style={{ aspectRatio: '16 / 9', width: 'min(100%, calc(76vh * 16 / 9))' }}
+    >
       {status !== 'ready' ? (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-slate-50/95 px-6 text-center dark:bg-slate-950/95">
           {status === 'loading' ? (
