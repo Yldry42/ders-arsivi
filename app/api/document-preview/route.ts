@@ -404,7 +404,7 @@ export async function GET(request: NextRequest) {
   return new Response(body, {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
-      'Cache-Control': 'public, max-age=3600',
+      'Cache-Control': 'no-store, max-age=0',
     },
   });
 }

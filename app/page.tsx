@@ -460,8 +460,10 @@ const getPdfPreviewSource = (previewUrl: string, zoom: number, searchQuery: stri
   return `${previewUrl}#${params.join('&')}`;
 };
 
+const documentPreviewVersion = '2026-08-22-slide-preview';
+
 const getDocumentPreviewSource = (fileUrl: string, fileName: string, zoom: number, searchQuery: string) =>
-  `/api/document-preview?url=${encodeURIComponent(fileUrl)}&name=${encodeURIComponent(fileName)}&zoom=${zoom}&q=${encodeURIComponent(searchQuery.trim())}`;
+  `/api/document-preview?url=${encodeURIComponent(fileUrl)}&name=${encodeURIComponent(fileName)}&zoom=${zoom}&q=${encodeURIComponent(searchQuery.trim())}&v=${documentPreviewVersion}`;
 
 const getArchiveTerm = (path: string, language: 'tr' | 'en') => {
   const normalizedPath = path.toLowerCase();
