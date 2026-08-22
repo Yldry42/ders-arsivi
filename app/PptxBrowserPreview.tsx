@@ -85,19 +85,19 @@ export default function PptxBrowserPreview({ fileName, fileUrl, previewUrl, zoom
         const buffer = await response.arrayBuffer();
         if (cancelled) return;
 
-        const viewerWidth = Math.max(720, Math.min(container.clientWidth - 36, 1280));
+        const viewerWidth = Math.max(720, container.clientWidth);
 
         const viewer = new PptxScrollViewer(container, {
           width: viewerWidth,
           background: 'transparent',
-          gap: 18,
-          paddingTop: 18,
-          paddingBottom: 20,
-          paddingLeft: 12,
-          paddingRight: 12,
+          gap: 0,
+          paddingTop: 0,
+          paddingBottom: 0,
+          paddingLeft: 0,
+          paddingRight: 0,
           dpr: Math.min(window.devicePixelRatio || 1, 2),
           useGoogleFonts: true,
-          pageShadow: '0 14px 34px rgba(15, 23, 42, 0.14)',
+          pageShadow: false,
           mode: 'main',
           onVisibleSlideChange: (topIndex, total) => {
             if (!cancelled) setSlideInfo({ current: topIndex + 1, total });
@@ -164,8 +164,8 @@ export default function PptxBrowserPreview({ fileName, fileUrl, previewUrl, zoom
 
   return (
     <div
-      className="relative mx-auto w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-950"
-      style={{ aspectRatio: '16 / 9', width: 'min(100%, calc(76vh * 16 / 9))' }}
+      className="relative w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-950"
+      style={{ aspectRatio: '16 / 9' }}
     >
       {status !== 'ready' ? (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-slate-50/95 px-6 text-center dark:bg-slate-950/95">

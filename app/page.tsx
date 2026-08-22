@@ -2799,7 +2799,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="min-h-[72vh] flex-1 bg-slate-100 p-2 dark:bg-slate-950 sm:p-3">
+            <div className={`${pptxPreviewExtensions.includes(archivePreview.uzanti) ? '' : 'min-h-[72vh]'} flex-1 bg-slate-100 p-2 dark:bg-slate-950 sm:p-3`}>
               {[...pdfPreviewExtensions, ...textPreviewExtensions].includes(archivePreview.uzanti) ? (
                 <iframe
                   src={archivePreview.uzanti === 'pdf' ? getPdfPreviewSource(archivePreview.previewUrl, archivePreviewZoom, archivePreviewSearch) : archivePreview.previewUrl}
