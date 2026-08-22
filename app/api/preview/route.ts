@@ -12,6 +12,16 @@ const textPreviewExtensions = new Set(['txt', 'md', 'csv', 'm', 'c', 'h', 'cpp',
 
 const getFileExtension = (fileName: string) => fileName.split('.').pop()?.toLowerCase() ?? '';
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: corsHeaders });
+}
+
 export async function GET(request: NextRequest) {
   const source = request.nextUrl.searchParams.get('url');
   const name = getSafeFileName(request.nextUrl.searchParams.get('name') ?? 'dosya');
@@ -35,14 +45,21 @@ export async function GET(request: NextRequest) {
     return new Response('File source is not allowed.', { status: 403 });
   }
 
-  const upstream = await fetch(fileUrl.toString());
+  let upstream: Response;
+
+  try {
+    upstream = await fetch(fileUrl.toString());
+  } catch {
+    return new Response('File could not be fetched.', { status: 502, headers: corsHeaders });
+  }
 
   if (!upstream.ok || !upstream.body) {
-    return new Response('File could not be fetched.', { status: upstream.status || 502 });
+    return new Response('File could not be fetched.', { status: upstream.status || 502, headers: corsHeaders });
   }
 
   return new Response(upstream.body, {
     headers: {
+      ...corsHeaders,
       'Content-Disposition': `inline; filename="${name.replace(/"/g, '')}"; filename*=UTF-8''${encodeURIComponent(name)}`,
       'Content-Type': textPreviewExtensions.has(getFileExtension(name)) ? 'text/plain; charset=utf-8' : upstream.headers.get('Content-Type') ?? 'application/octet-stream',
       'Cache-Control': 'public, max-age=3600',
