@@ -452,6 +452,7 @@ const pdfPreviewExtensions = ['pdf'];
 const textPreviewExtensions = ['txt', 'md', 'csv', 'm', 'c', 'h', 'cpp', 'hpp', 'cc', 'py', 'js', 'jsx', 'ts', 'tsx', 'java', 'cs', 'json', 'xml', 'html', 'css'];
 const imagePreviewExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'];
 const documentPreviewExtensions = ['doc', 'docx', 'xlsx'];
+const previewableExtensions = [...pdfPreviewExtensions, ...textPreviewExtensions, ...imagePreviewExtensions, ...documentPreviewExtensions];
 
 const getPdfPreviewSource = (previewUrl: string, zoom: number, searchQuery: string) => {
   const params = [`toolbar=0`, `navpanes=0`, `zoom=${zoom}`];
@@ -1361,6 +1362,7 @@ export default function Home() {
       const previewUrl = getArchivePreviewUrl(file);
       const downloadUrl = getArchiveDownloadUrl(file);
       const archivePath = getArchivePath(file);
+      const isPreviewable = previewableExtensions.includes(previewExtension);
 
       return (
         <div
@@ -1384,14 +1386,23 @@ export default function Home() {
                 {file.boyut}
               </span>
             ) : null}
-            <button
-              type="button"
-              onClick={() => setArchivePreview({ ad: file.dosya_adi, url, previewUrl, downloadUrl, uzanti: previewExtension })}
-              className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-700 hover:shadow-md"
-            >
-              <span aria-hidden>👁️</span>
-              {locale.preview}
-            </button>
+            {isPreviewable ? (
+              <button
+                type="button"
+                onClick={() => setArchivePreview({ ad: file.dosya_adi, url, previewUrl, downloadUrl, uzanti: previewExtension })}
+                className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-700 hover:shadow-md"
+              >
+                <span aria-hidden>👁️</span>
+                {locale.preview}
+              </button>
+            ) : (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full border bg-white/20 px-3.5 py-2 text-xs font-semibold opacity-80"
+                style={{ borderColor: `${accentColor}80`, color: textColor }}
+              >
+                {language === 'tr' ? 'Önizleme yok' : 'No preview'}
+              </span>
+            )}
             <a
               href={downloadUrl}
               className="inline-flex items-center gap-1.5 rounded-full border bg-white/25 px-3.5 py-2 text-xs font-semibold shadow-sm transition hover:-translate-y-0.5 hover:bg-white/40 hover:shadow-md"
@@ -2296,6 +2307,7 @@ export default function Home() {
                   const downloadUrl = getArchiveDownloadUrl(file);
                   const archivePath = getArchivePath(file);
                   const accentColor = ders.renk_kodu ?? '#64748b';
+                  const isPreviewable = previewableExtensions.includes(previewExtension);
 
                   return (
                     <article
@@ -2320,13 +2332,19 @@ export default function Home() {
                         </div>
 
                         <div className="flex shrink-0 gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setArchivePreview({ ad: file.dosya_adi, url: getArchiveFileUrl(file), previewUrl, downloadUrl, uzanti: previewExtension })}
-                            className="rounded-full bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700"
-                          >
-                            {locale.preview}
-                          </button>
+                          {isPreviewable ? (
+                            <button
+                              type="button"
+                              onClick={() => setArchivePreview({ ad: file.dosya_adi, url: getArchiveFileUrl(file), previewUrl, downloadUrl, uzanti: previewExtension })}
+                              className="rounded-full bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700"
+                            >
+                              {locale.preview}
+                            </button>
+                          ) : (
+                            <span className="rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                              {language === 'tr' ? 'Önizleme yok' : 'No preview'}
+                            </span>
+                          )}
                           <a
                             href={downloadUrl}
                             className="rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-900 transition hover:bg-white/60 dark:border-slate-700 dark:text-white"
