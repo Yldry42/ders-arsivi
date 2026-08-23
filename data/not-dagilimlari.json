@@ -58,21 +58,21 @@
       "donem": "Bahar",
       "etiket": "",
       "dagilim": {
-        "AA": 6,
-        "BA+": 0,
-        "BA": 2,
-        "BB+": 2,
-        "BB": 5,
-        "CB+": 0,
-        "CB": 5,
-        "CC+": 2,
-        "CC": 7,
-        "DC+": 0,
-        "DC": 4,
+        "AA": 38,
+        "BA+": 28,
+        "BA": 6,
+        "BB+": 6,
+        "BB": 0,
+        "CB+": 1,
+        "CB": 1,
+        "CC+": 0,
+        "CC": 0,
+        "DC+": 2,
+        "DC": 0,
         "DD+": 0,
-        "DD": 2,
-        "FF": 10,
-        "VF": 9
+        "DD": 0,
+        "FF": 1,
+        "VF": 0
       }
     },
     {
@@ -146,21 +146,17 @@
       "donem": "Bahar",
       "etiket": "",
       "dagilim": {
-        "AA": 1,
-        "BA+": 0,
-        "BA": 2,
-        "BB+": 0,
-        "BB": 4,
-        "CB+": 0,
-        "CB": 6,
-        "CC+": 0,
-        "CC": 17,
-        "DC+": 0,
-        "DC": 14,
-        "DD+": 0,
-        "DD": 5,
-        "FF": 7,
-        "VF": 0
+        "AA": null,
+        "BA+": null,
+        "BA": null,
+        "BB+": null,
+        "BB": null,
+        "CB+": null,
+        "CB": null,
+        "CC+": null,
+        "CC": null,
+        "FF": null,
+        "VF": null
       }
     },
     {
@@ -521,9 +517,9 @@
       "donem": "Güz",
       "etiket": "",
       "dagilim": {
-        "BL": 23,
-        "BZ": 7,
-        "VF": 12
+        "BL": null,
+        "BZ": null,
+        "VF": null
       }
     },
     {
@@ -797,21 +793,21 @@
       "donem": "Güz",
       "etiket": "",
       "dagilim": {
-        "AA": 17,
+        "AA": 1,
         "BA+": 4,
-        "BA": 3,
+        "BA": 5,
         "BB+": 7,
-        "BB": 1,
+        "BB": 5,
         "CB+": 7,
         "CB": 2,
         "CC+": 6,
-        "CC": 1,
+        "CC": 6,
         "DC+": 7,
-        "DC": 0,
+        "DC": 4,
         "DD+": 5,
-        "DD": 0,
-        "FF": 1,
-        "VF": 2
+        "DD": 1,
+        "FF": 20,
+        "VF": 0
       }
     },
     {
@@ -898,21 +894,21 @@
       "donem": "Bahar",
       "etiket": "",
       "dagilim": {
-        "AA": null,
-        "BA+": null,
-        "BA": null,
-        "BB+": null,
-        "BB": null,
-        "CB+": null,
-        "CB": null,
-        "CC+": null,
-        "CC": null,
+        "AA": 2,
+        "BA+": 0,
+        "BA": 5,
+        "BB+": 6,
+        "BB": 4,
+        "CB+": 5,
+        "CB": 3,
+        "CC+": 7,
+        "CC": 6,
         "DC+": null,
         "DC": null,
         "DD+": null,
         "DD": null,
-        "FF": null,
-        "VF": null
+        "FF": 13,
+        "VF": 0
       }
     },
     {

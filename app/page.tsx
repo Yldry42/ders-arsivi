@@ -2747,12 +2747,12 @@ export default function Home() {
           onClick={closeArchivePreview}
         >
           <section
-            className={`flex max-h-[94vh] w-full max-w-[min(96vw,86rem)] transform-gpu flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-xl backdrop-blur-md [contain:layout_paint] dark:border-slate-700 dark:bg-slate-900/95 ${
+            className={`flex h-[min(88vh,54rem)] w-[min(96vw,86rem)] min-h-[28rem] min-w-[20rem] max-h-[96vh] max-w-[98vw] resize transform-gpu flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-xl backdrop-blur-md [contain:layout_paint] dark:border-slate-700 dark:bg-slate-900/95 ${
               isArchivePreviewClosing ? 'animate-section-modal-out' : 'animate-section-modal'
             }`}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="relative border-b border-slate-200 p-3 dark:border-slate-700 sm:px-4">
+            <div className="relative shrink-0 border-b border-slate-200 p-3 dark:border-slate-700 sm:px-4">
               <FloatingCloseButton label={locale.close} onClick={closeArchivePreview} />
               <div className="flex flex-col gap-3 pr-14 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
@@ -2850,7 +2850,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className={`${pptxPreviewExtensions.includes(archivePreview.uzanti) ? '' : 'min-h-[72vh]'} flex-1 bg-slate-100 p-2 dark:bg-slate-950 sm:p-3`}>
+            <div className="min-h-0 flex-1 bg-slate-100 p-2 dark:bg-slate-950 sm:p-3">
               {[...pdfPreviewExtensions, ...textPreviewExtensions].includes(archivePreview.uzanti) ? (
                 <iframe
                   src={
@@ -2861,7 +2861,7 @@ export default function Home() {
                       : archivePreview.previewUrl
                   }
                   title={archivePreview.ad}
-                  className="h-[76vh] w-full rounded-xl border border-slate-200 bg-white dark:border-slate-700"
+                  className="h-full w-full rounded-xl border border-slate-200 bg-white dark:border-slate-700"
                 />
               ) : pptxPreviewExtensions.includes(archivePreview.uzanti) ? (
                 <PptxBrowserPreview
@@ -2883,10 +2883,10 @@ export default function Home() {
                 <iframe
                   src={getDocumentPreviewSource(archivePreview.url, archivePreview.ad, archivePreviewZoom, archivePreviewSearch)}
                   title={archivePreview.ad}
-                  className="h-[76vh] w-full rounded-xl border border-slate-200 bg-white dark:border-slate-700"
+                  className="h-full w-full rounded-xl border border-slate-200 bg-white dark:border-slate-700"
                 />
               ) : imagePreviewExtensions.includes(archivePreview.uzanti) ? (
-                <div className="flex h-[76vh] items-center justify-center overflow-auto rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+                <div className="flex h-full items-center justify-center overflow-auto rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={archivePreview.previewUrl}
@@ -2897,7 +2897,7 @@ export default function Home() {
                 </div>
 
               ) : (
-                <div className="flex h-[76vh] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-900">
+                <div className="flex h-full flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-900">
                   <p className="max-w-md text-sm leading-6 text-slate-600 dark:text-slate-300">
                     {locale.previewUnavailable}
                   </p>
