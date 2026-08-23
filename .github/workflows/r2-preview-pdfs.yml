@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       force:
-        description: "Var olan PDF önizlemeleri yeniden üret"
+        description: "Regenerate existing PDF previews"
         required: false
         default: "false"
         type: choice
@@ -53,15 +53,9 @@ jobs:
           set -euo pipefail
 
           sudo apt-get update
-          sudo apt-get install -y \
-            awscli \
-            libreoffice \
-            libreoffice-impress \
-            libreoffice-writer \
-            fonts-crosextra-carlito \
-            fonts-crosextra-caladea \
-            fonts-dejavu \
-            fonts-liberation
+          sudo apt-get install -y awscli
+          sudo apt-get install -y libreoffice fonts-dejavu fonts-liberation
+          sudo apt-get install -y fonts-crosextra-carlito fonts-crosextra-caladea || true
 
       - name: Download archive objects from R2
         shell: bash
@@ -121,12 +115,6 @@ jobs:
             rm -rf "${temp_dir}"
           done < <(find r2-source -type f \( -iname "*.doc" -o -iname "*.docx" -o -iname "*.ppt" -o -iname "*.pptx" \) -print0)
 
-          {
-            echo "converted=${converted}"
-            echo "skipped=${skipped}"
-            echo "failed=${failed}"
-          } >> "$GITHUB_OUTPUT"
-
           echo "Converted: ${converted}"
           echo "Skipped: ${skipped}"
           echo "Failed: ${failed}"
@@ -149,9 +137,9 @@ jobs:
         shell: bash
         run: |
           {
-            echo "## R2 PDF önizleme üretimi"
+            echo "## R2 PDF preview generation"
             echo ""
-            echo "- DOC/DOCX/PPT/PPTX dosyaları R2'den okundu."
-            echo "- PDF önizlemeler \`_previews/...\` altına yüklendi."
-            echo "- Site \`/api/archive\` üzerinden bu önizlemeleri otomatik algılar."
+            echo "- DOC/DOCX/PPT/PPTX files were read from R2."
+            echo "- PDF previews were uploaded under \`_previews/...\`."
+            echo "- The site detects these previews automatically through \`/api/archive\`."
           } >> "$GITHUB_STEP_SUMMARY"
