@@ -380,6 +380,17 @@ const debugArchiveMatches = process.env.NODE_ENV === 'development';
 
 const archivePublicBaseUrl = 'https://pub-9166db2e46694c818420c32e7545d40c.r2.dev';
 const productionArchiveApiUrl = 'https://ders-arsivi.vercel.app/api/archive';
+const productionPreviewApiUrl = 'https://ders-arsivi.vercel.app/api/preview';
+
+const withArchiveCacheBuster = (url: string) => {
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}t=${Date.now()}`;
+};
+
+const getPreviewApiUrl = () => {
+  if (typeof window === 'undefined') return '/api/preview';
+  return window.location.origin === 'https://ders-arsivi.vercel.app' ? '/api/preview' : productionPreviewApiUrl;
+};
 
 const courseArchiveAliases: Record<string, string[]> = {
   BIL110E: ['BIL110'],
@@ -441,7 +452,7 @@ const getArchivePreviewFileUrl = (item: ArsivDosyasi) => {
 };
 
 const getArchivePreviewUrl = (item: ArsivDosyasi) =>
-  `/api/preview?url=${encodeURIComponent(getArchivePreviewFileUrl(item))}&name=${encodeURIComponent(item.preview_yol || item.preview_url ? `${item.dosya_adi}.pdf` : item.dosya_adi)}`;
+  `${getPreviewApiUrl()}?url=${encodeURIComponent(getArchivePreviewFileUrl(item))}&name=${encodeURIComponent(item.preview_yol || item.preview_url ? `${item.dosya_adi}.pdf` : item.dosya_adi)}`;
 
 const getFileExtension = (fileName: string) => {
   const extension = fileName.split('.').pop();
@@ -459,8 +470,9 @@ const docxPreviewExtensions = ['docx'];
 const pptxPreviewExtensions = ['pptx'];
 const previewableExtensions = [...pdfPreviewExtensions, ...textPreviewExtensions, ...imagePreviewExtensions, ...documentPreviewExtensions, ...docxPreviewExtensions, ...pptxPreviewExtensions];
 
-const getPdfPreviewSource = (previewUrl: string, zoom: number, searchQuery: string) => {
+const getPdfPreviewSource = (previewUrl: string, zoom: number, searchQuery: string, fitPage = false) => {
   const params = [`toolbar=0`, `navpanes=0`, `zoom=${zoom}`];
+  if (fitPage) params.push('view=FitH');
   const query = searchQuery.trim();
   if (query) params.push(`search=${encodeURIComponent(query)}`);
   return `${previewUrl}#${params.join('&')}`;
@@ -470,6 +482,9 @@ const documentPreviewVersion = '2026-08-22-slide-preview';
 
 const getDocumentPreviewSource = (fileUrl: string, fileName: string, zoom: number, searchQuery: string) =>
   `/api/document-preview?url=${encodeURIComponent(fileUrl)}&name=${encodeURIComponent(fileName)}&zoom=${zoom}&q=${encodeURIComponent(searchQuery.trim())}&v=${documentPreviewVersion}`;
+
+const getOfficePreviewSource = (fileUrl: string) =>
+  `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`;
 
 const getArchiveTerm = (path: string, language: 'tr' | 'en') => {
   const normalizedPath = path.toLowerCase();
@@ -512,7 +527,7 @@ export default function Home() {
   const dersList = dersler as Ders[];
   const fallbackArchiveList = arsivVerileri as ArsivDosyasi[];
   const noteOwnerData = notSahipleriVerileri as NotSahipleriVerisi;
-  const gradeDistributionData = notDagilimlariVerileri as NotDagilimlariVerisi;
+  const gradeDistributionData = notDagilimlariVerileri as unknown as NotDagilimlariVerisi;
   const [archiveList, setArchiveList] = useState<ArsivDosyasi[]>(fallbackArchiveList);
 
   const [language, setLanguage] = useState<'tr' | 'en'>('tr');
@@ -542,10 +557,10 @@ export default function Home() {
 
     const loadArchiveFromR2 = async () => {
       try {
-        let response = await fetch('/api/archive').catch(() => null);
+        let response = await fetch(withArchiveCacheBuster('/api/archive'), { cache: 'no-store' }).catch(() => null);
 
         if (!response?.ok && typeof window !== 'undefined' && window.location.origin !== 'https://ders-arsivi.vercel.app') {
-          response = await fetch(productionArchiveApiUrl).catch(() => null);
+          response = await fetch(withArchiveCacheBuster(productionArchiveApiUrl), { cache: 'no-store' }).catch(() => null);
         }
 
         if (!response?.ok) return;
@@ -630,6 +645,7 @@ export default function Home() {
   const [archivePreview, setArchivePreview] = useState<ArsivOnizleme | null>(null);
   const [archivePreviewZoom, setArchivePreviewZoom] = useState(100);
   const [archivePreviewSearch, setArchivePreviewSearch] = useState('');
+  const [archivePreviewMode, setArchivePreviewMode] = useState<'office' | 'pdf'>('pdf');
   const [isArchivePreviewClosing, setIsArchivePreviewClosing] = useState(false);
   const [isHeaderPinned, setIsHeaderPinned] = useState(false);
   const headerSentinelRef = useRef<HTMLDivElement | null>(null);
@@ -734,8 +750,12 @@ export default function Home() {
   }, [selectedDersId]);
 
   useEffect(() => {
-    setArchivePreviewZoom(100);
+    const originalExtension = archivePreview ? getFileExtension(archivePreview.ad) : '';
+    const isConvertedOfficePdf = archivePreview?.uzanti === 'pdf' && ['doc', 'docx', 'ppt', 'pptx'].includes(originalExtension);
+
+    setArchivePreviewZoom(isConvertedOfficePdf ? 35 : 100);
     setArchivePreviewSearch('');
+    setArchivePreviewMode(isConvertedOfficePdf ? 'office' : 'pdf');
     setIsArchivePreviewClosing(false);
   }, [archivePreview]);
 
@@ -1206,12 +1226,15 @@ export default function Home() {
 
   const renderGradeDistributions = (entries: HarfNotuDagilimi[], accentColor = '#64748b', variant: 'tinted' | 'plain' = 'tinted', animationKey = '') => {
     if (!entries.length) return null;
-    const gradeOrder = ['AA', 'BA+', 'BA', 'BB+', 'BB', 'CB+', 'CB', 'CC+', 'CC', 'DC+', 'DC', 'DD+', 'DD', 'FF', 'VF'];
+    const gradeOrder = ['AA', 'BA+', 'BA', 'BB+', 'BB', 'CB+', 'CB', 'CC+', 'CC', 'DC+', 'DC', 'DD+', 'DD', 'FF', 'BL', 'BZ', 'VF'];
+    const plusGradeLabels = new Set(['BA+', 'BB+', 'CB+', 'CC+', 'DC+', 'DD+']);
 
     return (
       <div className="space-y-4">
         {entries.map((entry, index) => {
-          const labels = Array.from(new Set([...gradeOrder, ...Object.keys(entry.dagilim)])).filter((label) => typeof entry.dagilim[label] === 'number');
+          const rawLabels = Array.from(new Set([...gradeOrder, ...Object.keys(entry.dagilim)])).filter((label) => typeof entry.dagilim[label] === 'number');
+          const hasAnyPlusGradeValue = rawLabels.some((label) => plusGradeLabels.has(label) && Number(entry.dagilim[label] ?? 0) > 0);
+          const labels = rawLabels.filter((label) => hasAnyPlusGradeValue || !plusGradeLabels.has(label));
           const maxCount = Math.max(...labels.map((label) => Number(entry.dagilim[label] ?? 0)), 1);
           const totalCount = labels.reduce((total, label) => total + Number(entry.dagilim[label] ?? 0), 0);
           const isCompactGradeSet = labels.length <= 11;
@@ -1399,20 +1422,16 @@ export default function Home() {
             {isPreviewable ? (
               <button
                 type="button"
-                onClick={() => setArchivePreview({ ad: file.dosya_adi, url, previewUrl, downloadUrl, uzanti: previewExtension })}
+                onClick={() => {
+                  setArchivePreviewMode(previewExtension === 'pdf' && ['doc', 'docx', 'ppt', 'pptx'].includes(extension) ? 'office' : 'pdf');
+                  setArchivePreview({ ad: file.dosya_adi, url, previewUrl, downloadUrl, uzanti: previewExtension });
+                }}
                 className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-700 hover:shadow-md"
               >
                 <span aria-hidden>👁️</span>
                 {locale.preview}
               </button>
-            ) : (
-              <span
-                className="inline-flex items-center gap-1.5 rounded-full border bg-white/20 px-3.5 py-2 text-xs font-semibold opacity-80"
-                style={{ borderColor: `${accentColor}80`, color: textColor }}
-              >
-                {language === 'tr' ? 'Önizleme yok' : 'No preview'}
-              </span>
-            )}
+            ) : null}
             <a
               href={downloadUrl}
               className="inline-flex items-center gap-1.5 rounded-full border bg-white/25 px-3.5 py-2 text-xs font-semibold shadow-sm transition hover:-translate-y-0.5 hover:bg-white/40 hover:shadow-md"
@@ -2346,16 +2365,15 @@ export default function Home() {
                           {isPreviewable ? (
                             <button
                               type="button"
-                              onClick={() => setArchivePreview({ ad: file.dosya_adi, url: getArchiveFileUrl(file), previewUrl, downloadUrl, uzanti: previewExtension })}
+                              onClick={() => {
+                                setArchivePreviewMode(previewExtension === 'pdf' && ['doc', 'docx', 'ppt', 'pptx'].includes(extension) ? 'office' : 'pdf');
+                                setArchivePreview({ ad: file.dosya_adi, url: getArchiveFileUrl(file), previewUrl, downloadUrl, uzanti: previewExtension });
+                              }}
                               className="rounded-full bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700"
                             >
                               {locale.preview}
                             </button>
-                          ) : (
-                            <span className="rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:text-slate-400">
-                              {language === 'tr' ? 'Önizleme yok' : 'No preview'}
-                            </span>
-                          )}
+                          ) : null}
                           <a
                             href={downloadUrl}
                             className="rounded-full border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-900 transition hover:bg-white/60 dark:border-slate-700 dark:text-white"
@@ -2717,6 +2735,11 @@ export default function Home() {
       )}
 
       {archivePreview ? (
+        (() => {
+          const originalPreviewExtension = getFileExtension(archivePreview.ad);
+          const isConvertedOfficePdf = archivePreview.uzanti === 'pdf' && ['doc', 'docx', 'ppt', 'pptx'].includes(originalPreviewExtension);
+
+          return (
         <div
           className={`fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/75 p-2 sm:p-3 ${
             isArchivePreviewClosing ? 'animate-modal-backdrop-out' : 'animate-modal-backdrop'
@@ -2741,6 +2764,32 @@ export default function Home() {
                 </p>
               </div>
               <div className="flex shrink-0 flex-wrap items-center gap-2">
+                {isConvertedOfficePdf ? (
+                  <div className="flex h-11 items-center rounded-full border border-slate-200 bg-slate-50/90 p-1 text-xs font-bold shadow-sm dark:border-slate-700 dark:bg-slate-950/90">
+                    <button
+                      type="button"
+                      onClick={() => setArchivePreviewMode('office')}
+                      className={`h-9 rounded-full px-3 transition ${
+                        archivePreviewMode === 'office'
+                          ? 'bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900'
+                          : 'text-slate-600 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      {language === 'tr' ? 'Office görünümü' : 'Office view'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setArchivePreviewMode('pdf')}
+                      className={`h-9 rounded-full px-3 transition ${
+                        archivePreviewMode === 'pdf'
+                          ? 'bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900'
+                          : 'text-slate-600 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      {language === 'tr' ? 'Hızlı PDF' : 'Fast PDF'}
+                    </button>
+                  </div>
+                ) : null}
                 {[...pdfPreviewExtensions, ...documentPreviewExtensions, ...docxPreviewExtensions, ...pptxPreviewExtensions].includes(archivePreview.uzanti) ? (
                   <label className="relative h-11 min-w-[12rem] flex-1 sm:flex-none">
                     <span className="sr-only">{language === 'tr' ? 'PDF içinde ara' : 'Search in PDF'}</span>
@@ -2769,9 +2818,9 @@ export default function Home() {
                   <div className="flex h-11 items-center rounded-full border border-slate-200 bg-slate-50/90 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-950/90">
                     <button
                       type="button"
-                      onClick={() => setArchivePreviewZoom((zoom) => Math.max(50, zoom - 10))}
+                      onClick={() => setArchivePreviewZoom((zoom) => Math.max(25, zoom - 10))}
                       className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-semibold text-slate-700 transition hover:bg-white hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
-                      disabled={archivePreviewZoom <= 50}
+                      disabled={archivePreviewZoom <= 25}
                       aria-label="Uzaklaştır"
                     >
                       −
@@ -2804,7 +2853,13 @@ export default function Home() {
             <div className={`${pptxPreviewExtensions.includes(archivePreview.uzanti) ? '' : 'min-h-[72vh]'} flex-1 bg-slate-100 p-2 dark:bg-slate-950 sm:p-3`}>
               {[...pdfPreviewExtensions, ...textPreviewExtensions].includes(archivePreview.uzanti) ? (
                 <iframe
-                  src={archivePreview.uzanti === 'pdf' ? getPdfPreviewSource(archivePreview.previewUrl, archivePreviewZoom, archivePreviewSearch) : archivePreview.previewUrl}
+                  src={
+                    archivePreview.uzanti === 'pdf'
+                      ? isConvertedOfficePdf && archivePreviewMode === 'office'
+                        ? getOfficePreviewSource(archivePreview.url)
+                        : getPdfPreviewSource(archivePreview.previewUrl, archivePreviewZoom, archivePreviewSearch, isConvertedOfficePdf)
+                      : archivePreview.previewUrl
+                  }
                   title={archivePreview.ad}
                   className="h-[76vh] w-full rounded-xl border border-slate-200 bg-white dark:border-slate-700"
                 />
@@ -2858,6 +2913,8 @@ export default function Home() {
             </div>
           </section>
         </div>
+          );
+        })()
       ) : null}
     </main>
   );

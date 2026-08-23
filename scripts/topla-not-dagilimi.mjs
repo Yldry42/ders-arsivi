@@ -27,6 +27,9 @@ const archiveCache = new Map();
 const instructorAliases = {
   'Seher Eken': ['Seher Durmaz'],
 };
+const manuallyVerifiedSingleSectionCourses = new Set([
+  'UZB352E|2024-2025|Güz',
+]);
 
 function normalizeCourseCode(value) {
   return String(value ?? '').replace(/\s+/g, '').trim();
@@ -53,6 +56,14 @@ function getInstructorNamesWithAliases(value) {
   return normalizeInstructors(value).flatMap((name) => [name, ...(instructorAliases[name] ?? [])]);
 }
 
+function courseTermKey(course) {
+  return [
+    normalizeCourseCode(`${course.kod}${course.no}`),
+    String(course.yil ?? ''),
+    normalizeTerm(course.donem),
+  ].join('|');
+}
+
 function getAcademicYears(courseYear) {
   const years = String(courseYear).match(/\d{4}/g);
   return {
@@ -73,7 +84,7 @@ function getSemesterSnapshotCandidates(dates, courseYear, term) {
   const inRange = (from, to) => dated.filter((item) => item.time >= from.getTime() && item.time <= to.getTime());
 
   if (normalizedTerm === 'Güz') {
-    return inRange(new Date(`${start}-08-01T00:00:00Z`), new Date(`${end}-01-31T23:59:59Z`));
+    return inRange(new Date(`${start}-08-01T00:00:00Z`), new Date(`${start}-12-31T23:59:59Z`));
   }
 
   if (normalizedTerm === 'Bahar') {
@@ -147,7 +158,7 @@ async function fetchArchiveRows(date, branchCode) {
   return parsed;
 }
 
-async function findArchiveMatch(dates, course) {
+async function findArchiveMatch(dates, course, obsTotal) {
   const courseCode = `${course.kod}${course.no}`;
   const expectedInstructors = getInstructorNamesWithAliases(course.ogretim_uyesi).map(normalizeName);
   const candidates = getSemesterSnapshotCandidates(dates, course.yil, course.donem);
@@ -159,26 +170,41 @@ async function findArchiveMatch(dates, course) {
     if (!matches.length) continue;
 
     const instructors = [...new Set(matches.map((row) => row.Instructor).filter(Boolean))];
-    const enrolled = Math.max(...matches.map((row) => Number(String(row.Enrolled ?? '0').replace(/[^\d.-]/g, '')) || 0), 0);
-    archiveCandidates.push({ snapshot: snapshot.value, matches, instructors, enrolled });
+    const enrolledValues = matches.map((row) => Number(String(row.Enrolled ?? '0').replace(/[^\d.-]/g, '')) || 0);
+    const enrolled = Math.max(...enrolledValues, 0);
+    const enrolledTotal = enrolledValues.reduce((sum, value) => sum + value, 0);
+    archiveCandidates.push({ snapshot: snapshot.value, matches, instructors, enrolled, enrolledTotal });
   }
 
   if (archiveCandidates.length) {
-    archiveCandidates.sort((left, right) => right.enrolled - left.enrolled || right.snapshot.localeCompare(left.snapshot));
+    archiveCandidates.sort((left, right) => right.enrolledTotal - left.enrolledTotal || right.snapshot.localeCompare(left.snapshot));
     const selected = archiveCandidates[0];
     const normalizedInstructors = selected.instructors.map(normalizeName);
     const allMatchExpected =
       expectedInstructors.length > 0 &&
       normalizedInstructors.length > 0 &&
       normalizedInstructors.every((name) => expectedInstructors.includes(name));
+    const enrollmentMatchesObs =
+      !obsTotal ||
+      !selected.enrolledTotal ||
+      (obsTotal >= selected.enrolledTotal * 0.65 && obsTotal <= selected.enrolledTotal * 1.35);
+    const isSingleBranch = selected.matches.length === 1;
+    const isHighConfidence = isSingleBranch && selected.instructors.length === 1 && allMatchExpected && enrollmentMatchesObs;
 
     return {
       snapshot: selected.snapshot,
       branchCount: selected.matches.length,
       instructors: selected.instructors,
       enrolled: selected.enrolled,
-      confidence: selected.instructors.length === 1 && allMatchExpected ? 'high' : 'review',
-      reason: selected.instructors.length === 1 && allMatchExpected ? 'Arşivde dönem içinde tek ve beklenen hoca.' : 'Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.',
+      enrolledTotal: selected.enrolledTotal,
+      confidence: isHighConfidence ? 'high' : 'review',
+      reason: isHighConfidence
+        ? 'Arşivde dönem içinde tek ve beklenen hoca; OBS toplamı arşiv kaydıyla uyumlu.'
+        : !isSingleBranch
+          ? 'ArÅŸivde aynÄ± ders iÃ§in birden fazla ÅŸube var; OBS daÄŸÄ±lÄ±mÄ± ÅŸubeleri birleÅŸtiriyor olabilir.'
+          : !enrollmentMatchesObs
+          ? 'OBS toplamı arşivdeki kayıtlı öğrenci sayısıyla uyumlu değil.'
+          : 'Arşivde hoca bilgisi dersler.json ile net uyuşmuyor.',
     };
   }
 
@@ -186,10 +212,12 @@ async function findArchiveMatch(dates, course) {
     snapshot: null,
     branchCount: 0,
     instructors: [],
-    confidence: expectedInstructors.length ? 'medium' : 'review',
-    reason: expectedInstructors.length
-      ? 'Dönem arşiv snapshotında ders yok; dersler.json hocası kullanılacak.'
-      : 'Dönem arşiv snapshotında ders yok ve dersler.json hocası yok.',
+    confidence: manuallyVerifiedSingleSectionCourses.has(courseTermKey(course)) ? 'high' : expectedInstructors.length ? 'medium' : 'review',
+    reason: manuallyVerifiedSingleSectionCourses.has(courseTermKey(course))
+      ? 'Dönem arşiv snapshotı eksik; tek şube bilgisi manuel doğrulandı.'
+      : expectedInstructors.length
+        ? 'Dönem arşiv snapshotında ders yok; dersler.json hocası kullanılacak.'
+        : 'Dönem arşiv snapshotında ders yok ve dersler.json hocası yok.',
   };
 }
 
@@ -223,6 +251,22 @@ function buildDistribution(selectedDistribution) {
   ]));
 }
 
+function emptyDistribution() {
+  return Object.fromEntries(gradeOrder.map((grade) => [grade, null]));
+}
+
+function resetExistingDistributionsForCourse(courseCode, year, term) {
+  for (const entry of mergedEntries) {
+    if (
+      normalizeCourseCode(entry.ders_kodu) === normalizeCourseCode(courseCode) &&
+      String(entry.yil ?? '') === String(year ?? '') &&
+      normalizeTerm(entry.donem) === normalizeTerm(term)
+    ) {
+      entry.dagilim = emptyDistribution();
+    }
+  }
+}
+
 function shouldTrustMedium(courseCode) {
   return trustAllMedium || trustedMediumCodes?.has(courseCode);
 }
@@ -250,6 +294,8 @@ for (const course of targetCourses) {
   const selectedDistribution = pickObsTerm(obsDistributions, course.donem);
 
   if (!selectedDistribution) {
+    if (writeMode) resetExistingDistributionsForCourse(courseCode, course.yil, course.donem);
+
     review.push({
       ders_kodu: courseCode,
       ders_adi: course.ders_adi,
@@ -261,7 +307,8 @@ for (const course of targetCourses) {
     continue;
   }
 
-  const archiveMatch = await findArchiveMatch(dates, course);
+  const obsTotal = Number(selectedDistribution.ToplamAciklananOgrenci) || Object.values(buildDistribution(selectedDistribution)).reduce((sum, value) => sum + Number(value ?? 0), 0);
+  const archiveMatch = await findArchiveMatch(dates, course, obsTotal);
   const instructors = normalizeInstructors(course.ogretim_uyesi);
   const canonicalInstructor = instructors.find((name) => name && name !== '-') ?? '';
   const academicName = canonicalInstructor || archiveMatch.instructors[0] || '';
@@ -284,7 +331,9 @@ for (const course of targetCourses) {
     entry,
   });
 
-  if (archiveMatch.confidence === 'high' || (archiveMatch.confidence === 'medium' && shouldTrustMedium(courseCode))) {
+  const canWriteMedium = archiveMatch.confidence === 'medium' && Boolean(academicName) && shouldTrustMedium(courseCode);
+
+  if (archiveMatch.confidence === 'high' || canWriteMedium) {
     const key = entryKey(entry);
     const existingIndex = indexByKey.get(key);
     if (existingIndex === undefined) {
@@ -294,6 +343,8 @@ for (const course of targetCourses) {
       mergedEntries[existingIndex] = { ...mergedEntries[existingIndex], ...entry };
     }
   } else {
+    if (writeMode) resetExistingDistributionsForCourse(courseCode, entry.yil, entry.donem);
+
     review.push({
       ders_kodu: courseCode,
       ders_adi: course.ders_adi,
