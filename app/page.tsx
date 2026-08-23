@@ -2552,6 +2552,10 @@ export default function Home() {
               >
                 <div
                   className="course-modal-scrollbar h-full overflow-y-auto"
+                  style={{
+                    '--course-modal-scrollbar-track': `${lightenHex(accentColor, 0.76)}f2`,
+                    '--course-modal-scrollbar-thumb': `${accentColor}cc`,
+                  } as CSSProperties}
                 >
                 <div className="relative p-6">
                   <FloatingCloseButton label={locale.close} onClick={() => closeModal()} />
