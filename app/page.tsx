@@ -244,7 +244,7 @@ const translate = {
     itemsLabel: 'adet',
     instructorSingular: 'Akademisyen',
     instructorPlural: 'Akademisyenler',
-    noInfo: 'Bilgi yok',
+    noInfo: '—',
     noNotesInfo: 'Bu ders için not sahipleri bilgisi henüz bulunmuyor.',
     noPastQuestionInfo: 'Çıkmış soru bilgisi eklenmedi.',
     noCourseNoteInfo: 'Ders hakkında kısa bilgi henüz eklenmedi.',
@@ -261,9 +261,25 @@ const translate = {
     download: 'İndir',
     previewUnavailable: 'Bu dosya türü tarayıcı içinde ön izlenemeyebilir. İndirerek açabilirsiniz.',
     footerContactTitle: 'İletişim',
-    footerContactText: 'İletişim bilgileri eklenecek.',
+    footerContactText: 'Ders arşiviyle ilgili öneri, düzeltme ve katkılarınız için ulaşabilirsiniz.',
     footerCreatorsTitle: 'Hazırlayanlar',
-    footerCreatorsText: 'Hazırlayanların ad soyad bilgileri eklenecek.',
+    footerCreatorDetail: 'İTÜ Uzay Mühendisliği 2026 mezunu',
+    footerCopyEmail: 'Kopyala',
+    footerCopiedEmail: 'Kopyalandı',
+    footerOpenGmail: 'Gmail ile yaz',
+    feedbackLabel: 'Geri Bildirim',
+    feedbackTitle: 'Geri bildirim gönder',
+    feedbackDescription: 'Eksik dosya, hatalı bilgi veya önerilerinizi buradan gönderebilirsiniz.',
+    feedbackTypeLabel: 'Konu',
+    feedbackTypes: ['Eksik dosya', 'Hatalı bilgi', 'Öneri', 'Diğer'],
+    feedbackMessageLabel: 'Mesajınız',
+    feedbackMessagePlaceholder: 'Kısaca neyi düzeltmemiz veya eklememiz gerektiğini yazın...',
+    feedbackSenderLabel: 'İletişim adresiniz (isteğe bağlı)',
+    feedbackSenderPlaceholder: 'E-posta veya sosyal medya hesabı',
+    feedbackSend: 'Gönder',
+    feedbackSending: 'Gönderiliyor...',
+    feedbackSuccess: 'Geri bildiriminiz alındı. Teşekkürler!',
+    feedbackError: 'Gönderilemedi. Lütfen daha sonra tekrar deneyin.',
     footerMadeWith: 'Uzay mühendisliği öğrencileri tarafından ❤️ ile yapılmıştır.',
   },
   en: {
@@ -319,7 +335,7 @@ const translate = {
     itemsLabel: 'items',
     instructorSingular: 'Instructor',
     instructorPlural: 'Instructors',
-    noInfo: 'No info available',
+    noInfo: '—',
     noNotesInfo: 'No note owner information available.',
     noPastQuestionInfo: 'No past question information provided.',
     noCourseNoteInfo: 'No short course information has been added yet.',
@@ -336,9 +352,25 @@ const translate = {
     download: 'Download',
     previewUnavailable: 'This file type may not be previewable in the browser. You can download it instead.',
     footerContactTitle: 'Contact',
-    footerContactText: 'Contact information will be added.',
+    footerContactText: 'You can reach out for suggestions, corrections, and contributions about the archive.',
     footerCreatorsTitle: 'Creators',
-    footerCreatorsText: 'Creator names will be added.',
+    footerCreatorDetail: 'ITU Astronautical Engineering, Class of 2026',
+    footerCopyEmail: 'Copy',
+    footerCopiedEmail: 'Copied',
+    footerOpenGmail: 'Write with Gmail',
+    feedbackLabel: 'Feedback',
+    feedbackTitle: 'Send feedback',
+    feedbackDescription: 'Send missing files, incorrect information, or suggestions here.',
+    feedbackTypeLabel: 'Topic',
+    feedbackTypes: ['Missing file', 'Incorrect information', 'Suggestion', 'Other'],
+    feedbackMessageLabel: 'Your message',
+    feedbackMessagePlaceholder: 'Briefly describe what should be corrected or added...',
+    feedbackSenderLabel: 'Contact address (optional)',
+    feedbackSenderPlaceholder: 'Email or social media account',
+    feedbackSend: 'Send',
+    feedbackSending: 'Sending...',
+    feedbackSuccess: 'Your feedback has been received. Thank you!',
+    feedbackError: 'Could not send. Please try again later.',
     footerMadeWith: 'Made with ❤️ by Astronautical Engineering students.',
   },
 } as const;
@@ -648,7 +680,76 @@ export default function Home() {
   const [archivePreviewMode, setArchivePreviewMode] = useState<'office' | 'pdf'>('pdf');
   const [isArchivePreviewClosing, setIsArchivePreviewClosing] = useState(false);
   const [isHeaderPinned, setIsHeaderPinned] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
+  const [logoFailed, setLogoFailed] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackType, setFeedbackType] = useState<string>(translate.tr.feedbackTypes[0]);
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [feedbackSender, setFeedbackSender] = useState('');
+  const [feedbackStatus, setFeedbackStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+  const [isFeedbackClosing, setIsFeedbackClosing] = useState(false);
   const headerSentinelRef = useRef<HTMLDivElement | null>(null);
+
+  const contactEmails = ['yildiray.cankaya5542@gmail.com', 'cankayay21@itu.edu.tr'];
+  const getGmailComposeUrl = (email: string) =>
+    `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}`;
+
+  const copyEmail = async (email: string) => {
+    try {
+      await navigator.clipboard.writeText(email);
+      setCopiedEmail(email);
+      window.setTimeout(() => setCopiedEmail((current) => (current === email ? null : current)), 1600);
+    } catch {
+      window.open(getGmailComposeUrl(email), '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const openFeedback = () => {
+    setFeedbackOpen(true);
+    setIsFeedbackClosing(false);
+    setFeedbackStatus('idle');
+  };
+
+  const closeFeedback = () => {
+    if (isFeedbackClosing) return;
+    setIsFeedbackClosing(true);
+    window.setTimeout(() => {
+      setFeedbackOpen(false);
+      setIsFeedbackClosing(false);
+      setFeedbackStatus('idle');
+    }, 240);
+  };
+
+  const submitFeedback = async () => {
+    const trimmedMessage = feedbackMessage.trim();
+    if (!trimmedMessage || feedbackStatus === 'sending') return;
+
+    setFeedbackStatus('sending');
+
+    try {
+      const response = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: feedbackType,
+          message: trimmedMessage,
+          sender: feedbackSender.trim(),
+          page: typeof window !== 'undefined' ? window.location.href : '',
+        }),
+      });
+
+      if (!response.ok) throw new Error('Feedback request failed');
+
+      setFeedbackStatus('success');
+      setFeedbackMessage('');
+      setFeedbackSender('');
+      window.setTimeout(() => {
+        closeFeedback();
+      }, 1700);
+    } catch {
+      setFeedbackStatus('error');
+    }
+  };
 
   useEffect(() => {
     const sentinel = headerSentinelRef.current;
@@ -1064,7 +1165,7 @@ export default function Home() {
                   </p>
                 ))
               ) : (
-                <p className="text-sm leading-4 text-slate-600 dark:text-slate-300">{locale.noInfo}</p>
+                <p className="text-base font-black leading-4 text-slate-700 dark:text-slate-200">{locale.noInfo}</p>
               )}
             </div>
           </div>
@@ -1772,8 +1873,19 @@ export default function Home() {
         <div className="mx-auto h-[6.75rem] max-w-7xl overflow-visible rounded-3xl border border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-950/90 sm:h-[7.25rem]">
           <div className="flex h-full items-start justify-between gap-3 p-4 sm:p-5 md:items-center">
             <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-slate-950 text-sm font-black tracking-tight text-white shadow-sm dark:border-slate-700 dark:bg-white dark:text-slate-950 sm:h-14 sm:w-14">
-                İTÜ
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center sm:h-16 sm:w-16">
+                {!logoFailed ? (
+                  <img
+                    src="/itu-logo.png"
+                    alt="İstanbul Teknik Üniversitesi"
+                    className="h-full w-full object-contain"
+                    onError={() => setLogoFailed(true)}
+                  />
+                ) : (
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-950 text-sm font-black tracking-tight text-white dark:bg-white dark:text-slate-950">
+                    İTÜ
+                  </span>
+                )}
               </div>
               <div className="min-w-0 w-[min(52vw,34rem)] sm:w-[min(58vw,42rem)] lg:w-[42rem]">
                 <h1 className="min-h-[3.1rem] overflow-hidden text-xl font-semibold leading-tight text-slate-900 dark:text-white sm:min-h-[2.55rem] sm:text-3xl" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
@@ -1953,17 +2065,25 @@ export default function Home() {
 
             {selectedCategory === 'all' ? (
               <div className="mt-6 space-y-10">
-                {Object.entries(groupedDisplayedDersler ?? {}).map(([category, items]) => (
-                  <div key={category}>
-                    <div className="mb-4 flex items-center justify-between gap-4">
-                      <h3 className="min-w-0 flex-1 text-lg font-semibold text-slate-900 dark:text-white">{categories.find((cat) => cat.id === category)?.label[language] ?? category}</h3>
-                      <span className="shrink-0 min-w-[4.5rem] text-right tabular-nums text-sm text-slate-500 dark:text-slate-400">{items.length} {locale.itemsLabel}</span>
+                {Object.entries(groupedDisplayedDersler ?? {}).map(([category, items]) => {
+                  const categoryAccentColor = items[0]?.renk_kodu ?? '#64748b';
+                  return (
+                    <div key={category}>
+                      <div className="mb-4 flex items-center justify-between gap-4">
+                        <h3
+                          className="min-w-0 flex-1 text-lg font-bold"
+                          style={{ color: categoryAccentColor }}
+                        >
+                          {categories.find((cat) => cat.id === category)?.label[language] ?? category}
+                        </h3>
+                        <span className="shrink-0 min-w-[4.5rem] text-right tabular-nums text-sm text-slate-500 dark:text-slate-400">{items.length} {locale.itemsLabel}</span>
+                      </div>
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-[repeat(2,16rem)] xl:grid-cols-[repeat(3,16rem)]">
+                        {items.map((ders) => renderDersCard(ders))}
+                      </div>
                     </div>
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-[repeat(2,16rem)] xl:grid-cols-[repeat(3,16rem)]">
-                      {items.map((ders) => renderDersCard(ders))}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <section className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-[repeat(2,16rem)] xl:grid-cols-[repeat(3,16rem)]">
@@ -2066,18 +2186,97 @@ export default function Home() {
             <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
               {locale.footerContactTitle}
             </h2>
-            <p className="mt-3 text-sm leading-6 text-slate-700 dark:text-slate-300">
-              {locale.footerContactText}
-            </p>
+            <div className="mt-4 text-sm text-slate-700 dark:text-slate-200">
+              <div className="space-y-2">
+                {contactEmails.map((email) => (
+                  <div key={email} className="flex w-fit items-center gap-3">
+                    <a
+                      href={getGmailComposeUrl(email)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex min-w-0 items-center gap-3 break-all font-medium text-slate-700 transition hover:text-emerald-600 dark:text-slate-200 dark:hover:text-emerald-300"
+                    >
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true">
+                          <path
+                            d="M4.75 6.75h14.5v10.5H4.75V6.75Z"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <path
+                            d="m5.25 7.25 6.75 5 6.75-5"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </span>
+                      <span>{email}</span>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => copyEmail(email)}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/50 dark:hover:text-emerald-300"
+                      aria-label={`${email} ${locale.footerCopyEmail}`}
+                      title={copiedEmail === email ? locale.footerCopiedEmail : locale.footerCopyEmail}
+                    >
+                      {copiedEmail === email ? (
+                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true">
+                          <path
+                            d="m5 12 4 4 10-10"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true">
+                          <path
+                            d="M9 9.75A2.75 2.75 0 0 1 11.75 7h5.5A2.75 2.75 0 0 1 20 9.75v5.5A2.75 2.75 0 0 1 17.25 18h-5.5A2.75 2.75 0 0 1 9 15.25v-5.5Z"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          <path
+                            d="M7 15H6.75A2.75 2.75 0 0 1 4 12.25v-5.5A2.75 2.75 0 0 1 6.75 4h5.5A2.75 2.75 0 0 1 15 6.75V7"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
               {locale.footerCreatorsTitle}
             </h2>
-            <p className="mt-3 text-sm leading-6 text-slate-700 dark:text-slate-300">
-              {locale.footerCreatorsText}
-            </p>
+            <div className="mt-4 inline-flex flex-col items-start gap-2">
+              <button
+                type="button"
+                className="group relative rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-left text-sm font-semibold text-slate-900 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-400 hover:bg-emerald-50 dark:border-slate-700 dark:bg-slate-900/70 dark:text-white dark:hover:border-emerald-400/80 dark:hover:bg-emerald-950/40"
+                aria-describedby="creator-detail"
+              >
+                Yıldıray Çankaya
+                <span
+                  id="creator-detail"
+                  className="pointer-events-none absolute left-0 top-[calc(100%+0.6rem)] z-20 w-72 translate-y-1 rounded-2xl border border-slate-200 bg-white p-3 text-xs font-medium leading-5 text-slate-600 opacity-0 shadow-xl transition group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300"
+                >
+                  {locale.footerCreatorDetail}
+                </span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -2087,6 +2286,130 @@ export default function Home() {
           </p>
         </div>
       </footer>
+
+      <button
+        type="button"
+        onClick={openFeedback}
+        className="fixed bottom-5 right-5 z-[55] flex h-14 w-14 items-center justify-center rounded-full border border-emerald-400/50 bg-slate-950 text-white shadow-2xl shadow-slate-900/25 transition hover:-translate-y-1 hover:bg-emerald-500 hover:text-slate-950 dark:border-emerald-300/50 dark:bg-white dark:text-slate-950 dark:hover:bg-emerald-300"
+        aria-label={locale.feedbackTitle}
+        title={locale.feedbackTitle}
+      >
+        <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden="true">
+          <path
+            d="M5 17.25V7.75A3.75 3.75 0 0 1 8.75 4h6.5A3.75 3.75 0 0 1 19 7.75v3.5A3.75 3.75 0 0 1 15.25 15H10l-5 4.25v-2Z"
+            stroke="currentColor"
+            strokeWidth="1.9"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M9 8.75h6M9 11.25h3.75"
+            stroke="currentColor"
+            strokeWidth="1.9"
+            strokeLinecap="round"
+          />
+        </svg>
+      </button>
+
+      {feedbackOpen ? (
+        <div
+          className={`fixed inset-0 z-[85] flex items-end justify-end bg-slate-950/30 p-4 backdrop-blur-[2px] sm:p-6 ${
+            isFeedbackClosing ? 'animate-modal-backdrop-out' : 'animate-modal-backdrop'
+          }`}
+          onClick={closeFeedback}
+        >
+          <section
+            className={`w-full max-w-md transform-gpu rounded-3xl border border-slate-200 bg-white/95 p-5 shadow-2xl backdrop-blur-md dark:border-slate-700 dark:bg-slate-950/95 ${
+              isFeedbackClosing ? 'animate-section-modal-out' : 'animate-section-modal'
+            }`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{locale.feedbackTitle}</h2>
+                <p className="mt-1 text-sm leading-5 text-slate-600 dark:text-slate-400">
+                  {locale.feedbackDescription}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeFeedback}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-950 text-lg font-semibold text-white shadow-sm transition hover:bg-emerald-500 hover:text-slate-950 dark:bg-white dark:text-slate-950"
+                aria-label={locale.close}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                  {locale.feedbackTypeLabel}
+                </span>
+                <select
+                  value={feedbackType}
+                  onChange={(event) => setFeedbackType(event.target.value)}
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:ring-emerald-950/50"
+                >
+                  {locale.feedbackTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                  {locale.feedbackMessageLabel}
+                </span>
+                <textarea
+                  value={feedbackMessage}
+                  onChange={(event) => {
+                    setFeedbackMessage(event.target.value);
+                    if (feedbackStatus === 'error') setFeedbackStatus('idle');
+                  }}
+                  rows={5}
+                  placeholder={locale.feedbackMessagePlaceholder}
+                  className="mt-2 w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:ring-emerald-950/50"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                  {locale.feedbackSenderLabel}
+                </span>
+                <input
+                  value={feedbackSender}
+                  onChange={(event) => setFeedbackSender(event.target.value)}
+                  placeholder={locale.feedbackSenderPlaceholder}
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:ring-emerald-950/50"
+                />
+              </label>
+
+              {feedbackStatus === 'success' ? (
+                <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                  {locale.feedbackSuccess}
+                </p>
+              ) : null}
+              {feedbackStatus === 'error' ? (
+                <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+                  {locale.feedbackError}
+                </p>
+              ) : null}
+
+              <button
+                type="button"
+                onClick={submitFeedback}
+                disabled={!feedbackMessage.trim() || feedbackStatus === 'sending'}
+                className="w-full rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/15 transition hover:-translate-y-0.5 hover:bg-emerald-500 hover:text-slate-950 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:bg-slate-950 disabled:hover:text-white dark:bg-white dark:text-slate-950 dark:hover:bg-emerald-300"
+              >
+                {feedbackStatus === 'sending' ? locale.feedbackSending : locale.feedbackSend}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
 
       {selectedAcademic ? (
         <div
@@ -2528,6 +2851,12 @@ export default function Home() {
             const contrastText = getContrastTextColor(accentColor);
             const archiveItems = courseArchiveMap[ders.id] ?? [];
             const courseOfferings = getCourseOfferings(ders);
+            const courseOfferingsWithInstructors = courseOfferings
+              .map((offering) => ({
+                ...offering,
+                instructors: normalizeInstructors(offering.ogretim_uyesi).filter((instructor) => instructor && instructor !== '-'),
+              }))
+              .filter((offering) => offering.instructors.length > 0);
             const courseNoteOwners = getCourseNoteOwners(archiveItems, ders);
             const courseGradeDistributions = getCourseGradeDistributions(ders);
 
@@ -2695,42 +3024,44 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div
-                  className="border-t px-6 py-5"
-                  style={{
-                    color: getContrastTextColor(lightenHex(accentColor, 0.7)),
-                    borderColor: accentColor,
-                  }}
-                >
-                  <div className="space-y-2">
-                    <p className="text-xs uppercase tracking-[0.2em]" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>{locale.instructorPlural}</p>
-                    <div className="space-y-3">
-                      {courseOfferings.map((offering) => (
-                        <div key={`${offering.id}-${offering.yil}-${offering.donem}`} className="rounded-2xl border border-white/30 bg-white/15 px-4 py-3">
-                          <p className="text-xs font-semibold uppercase tracking-[0.12em] opacity-75" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>
-                            {offering.yil} · {offering.donem}
-                          </p>
-                          <div className="mt-2 space-y-1">
-                            {normalizeInstructors(offering.ogretim_uyesi).map((instructor) => (
-                              <button
-                                key={`${offering.id}-${instructor}`}
-                                type="button"
-                                onClick={() => {
-                                  setSelectedAcademicName(instructor);
-                                  setIsAcademicModalClosing(false);
-                                }}
-                                className="block text-left font-medium underline decoration-current/35 underline-offset-4 transition hover:opacity-70"
-                                style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}
-                              >
-                                {instructor}
-                              </button>
-                            ))}
+                {courseOfferingsWithInstructors.length ? (
+                  <div
+                    className="border-t px-6 py-5"
+                    style={{
+                      color: getContrastTextColor(lightenHex(accentColor, 0.7)),
+                      borderColor: accentColor,
+                    }}
+                  >
+                    <div className="space-y-2">
+                      <p className="text-xs uppercase tracking-[0.2em]" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>{locale.instructorPlural}</p>
+                      <div className="space-y-3">
+                        {courseOfferingsWithInstructors.map((offering) => (
+                          <div key={`${offering.id}-${offering.yil}-${offering.donem}`} className="rounded-2xl border border-white/30 bg-white/15 px-4 py-3">
+                            <p className="text-xs font-semibold uppercase tracking-[0.12em] opacity-75" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>
+                              {offering.yil} · {offering.donem}
+                            </p>
+                            <div className="mt-2 space-y-1">
+                              {offering.instructors.map((instructor) => (
+                                <button
+                                  key={`${offering.id}-${instructor}`}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedAcademicName(instructor);
+                                    setIsAcademicModalClosing(false);
+                                  }}
+                                  className="block text-left font-medium underline decoration-current/35 underline-offset-4 transition hover:opacity-70"
+                                  style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}
+                                >
+                                  {instructor}
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : null}
                 </div>
               </div>
             );
