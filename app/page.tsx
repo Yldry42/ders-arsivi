@@ -503,8 +503,12 @@ const pptxPreviewExtensions = ['pptx'];
 const previewableExtensions = [...pdfPreviewExtensions, ...textPreviewExtensions, ...imagePreviewExtensions, ...documentPreviewExtensions, ...docxPreviewExtensions, ...pptxPreviewExtensions];
 
 const getPdfPreviewSource = (previewUrl: string, zoom: number, searchQuery: string, fitPage = false) => {
-  const params = [`toolbar=0`, `navpanes=0`, `zoom=${zoom}`];
-  if (fitPage) params.push('view=FitH');
+  const params = [`toolbar=0`, `navpanes=0`];
+  if (fitPage) {
+    params.push('view=Fit');
+  } else {
+    params.push(`zoom=${zoom}`);
+  }
   const query = searchQuery.trim();
   if (query) params.push(`search=${encodeURIComponent(query)}`);
   return `${previewUrl}#${params.join('&')}`;
@@ -676,6 +680,7 @@ export default function Home() {
   const [openArchiveFolders, setOpenArchiveFolders] = useState<Record<string, boolean>>({});
   const [archivePreview, setArchivePreview] = useState<ArsivOnizleme | null>(null);
   const [archivePreviewZoom, setArchivePreviewZoom] = useState(100);
+  const [archivePreviewFit, setArchivePreviewFit] = useState(true);
   const [archivePreviewSearch, setArchivePreviewSearch] = useState('');
   const [archivePreviewMode, setArchivePreviewMode] = useState<'office' | 'pdf'>('pdf');
   const [isArchivePreviewClosing, setIsArchivePreviewClosing] = useState(false);
@@ -854,7 +859,8 @@ export default function Home() {
     const originalExtension = archivePreview ? getFileExtension(archivePreview.ad) : '';
     const isConvertedOfficePdf = archivePreview?.uzanti === 'pdf' && ['doc', 'docx', 'ppt', 'pptx'].includes(originalExtension);
 
-    setArchivePreviewZoom(isConvertedOfficePdf ? 35 : 100);
+    setArchivePreviewZoom(isConvertedOfficePdf ? 70 : 100);
+    setArchivePreviewFit(true);
     setArchivePreviewSearch('');
     setArchivePreviewMode(isConvertedOfficePdf ? 'office' : 'pdf');
     setIsArchivePreviewClosing(false);
@@ -1868,7 +1874,7 @@ export default function Home() {
   }, [isInstructorInputFocused, instructorQuery, instructorSuggestions]);
 
   return (
-    <main className="min-h-screen px-4 py-5 sm:px-6 sm:py-10 max-w-7xl mx-auto bg-[var(--background)] text-[var(--foreground)] transition-colors duration-300">
+    <main className="relative isolate min-h-screen px-4 py-5 sm:px-6 sm:py-10 max-w-7xl mx-auto bg-[var(--background)] text-[var(--foreground)] transition-colors duration-300">
       <div className="sticky top-0 z-30 -mx-4 mb-5 bg-[var(--background)]/95 px-4 pb-3 pt-2 backdrop-blur-md sm:-mx-6 sm:mb-6 sm:px-6 sm:pb-4">
         <div className="mx-auto h-[6.75rem] max-w-7xl overflow-visible rounded-3xl border border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-950/90 sm:h-[7.25rem]">
           <div className="flex h-full items-start justify-between gap-3 p-4 sm:p-5 md:items-center">
@@ -3153,19 +3159,30 @@ export default function Home() {
                   <div className="flex h-11 items-center rounded-full border border-slate-200 bg-slate-50/90 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-950/90">
                     <button
                       type="button"
-                      onClick={() => setArchivePreviewZoom((zoom) => Math.max(25, zoom - 10))}
+                      onClick={() => {
+                        setArchivePreviewFit(false);
+                        setArchivePreviewZoom((zoom) => Math.max(25, zoom - 10));
+                      }}
                       className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-semibold text-slate-700 transition hover:bg-white hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
                       disabled={archivePreviewZoom <= 25}
                       aria-label="Uzaklaştır"
                     >
                       −
                     </button>
-                    <span className="min-w-14 text-center text-xs font-bold tabular-nums text-slate-600 dark:text-slate-300">
-                      {archivePreviewZoom}%
-                    </span>
                     <button
                       type="button"
-                      onClick={() => setArchivePreviewZoom((zoom) => Math.min(180, zoom + 10))}
+                      onClick={() => setArchivePreviewFit(true)}
+                      className="min-w-16 rounded-full px-2 text-center text-xs font-bold tabular-nums text-slate-600 transition hover:bg-white hover:shadow-sm dark:text-slate-300 dark:hover:bg-slate-800"
+                      title={language === 'tr' ? 'Sayfaya sığdır' : 'Fit to page'}
+                    >
+                      {archivePreviewFit ? (language === 'tr' ? 'Sığdır' : 'Fit') : `${archivePreviewZoom}%`}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setArchivePreviewFit(false);
+                        setArchivePreviewZoom((zoom) => Math.min(180, zoom + 10));
+                      }}
                       className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-semibold text-slate-700 transition hover:bg-white hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
                       disabled={archivePreviewZoom >= 180}
                       aria-label="Yakınlaştır"
@@ -3192,7 +3209,7 @@ export default function Home() {
                     archivePreview.uzanti === 'pdf'
                       ? isConvertedOfficePdf && archivePreviewMode === 'office'
                         ? getOfficePreviewSource(archivePreview.url)
-                        : getPdfPreviewSource(archivePreview.previewUrl, archivePreviewZoom, archivePreviewSearch, isConvertedOfficePdf)
+                        : getPdfPreviewSource(archivePreview.previewUrl, archivePreviewZoom, archivePreviewSearch, archivePreviewFit)
                       : archivePreview.previewUrl
                   }
                   title={archivePreview.ad}
