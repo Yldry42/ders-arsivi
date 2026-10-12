@@ -6,6 +6,7 @@ const token = process.env.FEEDBACK_GITHUB_TOKEN;
 
 type FeedbackPayload = {
   type?: string;
+  name?: string;
   message?: string;
   sender?: string;
   page?: string;
@@ -24,6 +25,7 @@ export async function POST(request: Request) {
   }
 
   const type = cleanText(payload.type, 80) || 'Geri bildirim';
+  const name = cleanText(payload.name, 120) || 'Belirtilmedi';
   const message = cleanText(payload.message, 4000);
   const sender = cleanText(payload.sender, 200) || 'Belirtilmedi';
   const page = cleanText(payload.page, 500) || 'Belirtilmedi';
@@ -44,6 +46,7 @@ export async function POST(request: Request) {
     '## Geri Bildirim',
     '',
     `**Konu:** ${type}`,
+    `**Ad soyad:** ${name}`,
     `**Gönderen:** ${sender}`,
     `**Sayfa:** ${page}`,
     '',

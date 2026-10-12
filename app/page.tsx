@@ -272,6 +272,8 @@ const translate = {
     feedbackDescription: 'Eksik dosya, hatalı bilgi veya önerilerinizi buradan gönderebilirsiniz.',
     feedbackTypeLabel: 'Konu',
     feedbackTypes: ['Eksik dosya', 'Hatalı bilgi', 'Öneri', 'Diğer'],
+    feedbackNameLabel: 'Adınız (isteğe bağlı)',
+    feedbackNamePlaceholder: 'Ad soyad',
     feedbackMessageLabel: 'Mesajınız',
     feedbackMessagePlaceholder: 'Kısaca neyi düzeltmemiz veya eklememiz gerektiğini yazın...',
     feedbackSenderLabel: 'İletişim adresiniz (isteğe bağlı)',
@@ -363,6 +365,8 @@ const translate = {
     feedbackDescription: 'Send missing files, incorrect information, or suggestions here.',
     feedbackTypeLabel: 'Topic',
     feedbackTypes: ['Missing file', 'Incorrect information', 'Suggestion', 'Other'],
+    feedbackNameLabel: 'Your name (optional)',
+    feedbackNamePlaceholder: 'Full name',
     feedbackMessageLabel: 'Your message',
     feedbackMessagePlaceholder: 'Briefly describe what should be corrected or added...',
     feedbackSenderLabel: 'Contact address (optional)',
@@ -689,6 +693,7 @@ export default function Home() {
   const [logoFailed, setLogoFailed] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackType, setFeedbackType] = useState<string>(translate.tr.feedbackTypes[0]);
+  const [feedbackName, setFeedbackName] = useState('');
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [feedbackSender, setFeedbackSender] = useState('');
   const [feedbackStatus, setFeedbackStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
@@ -742,6 +747,7 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: feedbackType,
+          name: feedbackName.trim(),
           message: trimmedMessage,
           sender: feedbackSender.trim(),
           page: typeof window !== 'undefined' ? window.location.href : '',
@@ -751,6 +757,7 @@ export default function Home() {
       if (!response.ok) throw new Error('Feedback request failed');
 
       setFeedbackStatus('success');
+      setFeedbackName('');
       setFeedbackMessage('');
       setFeedbackSender('');
       window.setTimeout(() => {
@@ -2368,6 +2375,18 @@ export default function Home() {
                     </option>
                   ))}
                 </select>
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                  {locale.feedbackNameLabel}
+                </span>
+                <input
+                  value={feedbackName}
+                  onChange={(event) => setFeedbackName(event.target.value)}
+                  placeholder={locale.feedbackNamePlaceholder}
+                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:ring-emerald-950/50"
+                />
               </label>
 
               <label className="block">
