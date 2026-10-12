@@ -18,6 +18,7 @@ const withObs = process.argv.includes('--with-obs');
 const compact = process.argv.includes('--compact');
 const writeAccepted = process.argv.includes('--write-accepted');
 const titleAliases = process.argv.includes('--title-aliases');
+const allInstructors = process.argv.includes('--all-instructors');
 const onlyArg = process.argv.find((arg) => arg.startsWith('--only='));
 const onlyCodes = onlyArg
   ? new Set(onlyArg.replace('--only=', '').split(',').map((code) => code.trim()).filter(Boolean))
@@ -54,6 +55,17 @@ function getBranchCode(courseCode) {
 
 function normalizeName(value) {
   return String(value ?? '').toLocaleLowerCase('tr').replace(/\s+/g, ' ').trim();
+}
+
+function isKnownInstructorName(value) {
+  const normalized = normalizeName(value);
+  return Boolean(normalized) &&
+    normalized !== '-' &&
+    !normalized.includes('***') &&
+    !normalized.includes(',') &&
+    !normalized.includes(' ve ') &&
+    !normalized.includes(' and ') &&
+    !normalized.includes('&');
 }
 
 function parseEnrollment(value) {
@@ -357,8 +369,10 @@ for (const course of targetCourses) {
 
       if (!rowsForHit.length) continue;
 
-      const instructors = [...new Set(rowsForHit.map((row) => normalizeName(row.Instructor)).filter(Boolean))];
-      if (instructors.length !== 1 || instructors[0] !== expectedInstructor) continue;
+      const instructorNames = [...new Set(rowsForHit.map((row) => row.Instructor).filter(isKnownInstructorName))];
+      const instructors = [...new Set(instructorNames.map(normalizeName))];
+      if (instructors.length !== 1) continue;
+      if (!allInstructors && instructors[0] !== expectedInstructor) continue;
 
       const enrolled = rowsForHit.reduce((sum, row) => sum + parseEnrollment(row.Enrolled), 0);
       if (enrolled < minEnrollment) continue;
@@ -373,7 +387,7 @@ for (const course of targetCourses) {
         aliasName: candidate.aliasName,
         crn: rowsForHit.map((row) => row.CRN).filter(Boolean).join('+'),
         title: rowsForHit[0]['Course Title'],
-        instructor: rowsForHit[0].Instructor,
+        instructor: instructorNames[0] ?? rowsForHit[0].Instructor,
         enrolled,
       });
     }
@@ -435,7 +449,7 @@ if (writeAccepted) {
     (item.acceptedHits ?? []).map((hit) => ({
       ders_kodu: item.code,
       ders_adi: item.name,
-      akademisyen: item.instructor,
+      akademisyen: hit.instructor ?? item.instructor,
       yil: hit.obs.year,
       donem: hit.obs.term,
       etiket: hit.aliasNote ?? '',
@@ -472,7 +486,7 @@ if (compact) {
         .map((hit) => ({
           code: item.code,
           name: item.name,
-          instructor: item.instructor,
+          instructor: hit.instructor ?? item.instructor,
           sourceCode: hit.sourceCode ?? item.code,
           matchType: hit.matchType ?? 'code',
           aliasNote: hit.aliasNote ?? '',
