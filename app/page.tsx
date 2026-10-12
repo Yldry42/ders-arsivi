@@ -443,6 +443,7 @@ const courseArchiveAliases: Record<string, string[]> = {
   UUM509E: ['UUM509E (Turbulent Flow)'],
   UUM511: ['UUM511 (Viskoz Akışlar)'],
   UUM535E: ['UUM535E (Engineering Mathematics)'],
+  UZM507E: ['UZM517E'],
   UZB220E: ['UZB220E (Mechanical Vibrations)'],
   UZB301E: ['UZB301E (Measurement Techniques)'],
   UZB310E: ['UZB310E (Compressible Aerodynamics)'],

@@ -698,7 +698,7 @@
     "kod": "UUM",
     "no": "621E",
     "ders_adi": "Sıkıştırılabilir Akışta İleri Problemler",
-    "ogretim_uyesi": "-",
+    "ogretim_uyesi": "Aydın Mısırlıoğlu",
     "donem": "Güz",
     "yil": "2026-2027",
     "kategori": "Yüksek Lisans Dersleri",
@@ -709,14 +709,14 @@
   {
     "id": 55,
     "kod": "UZM",
-    "no": "517E",
-    "ders_adi": "UZM 517E",
-    "ogretim_uyesi": "-",
+    "no": "507E",
+    "ders_adi": "Uzay Araçlarının Dinamiği",
+    "ogretim_uyesi": "Cuma Yarım",
     "donem": "Güz",
     "yil": "2026-2027",
     "kategori": "Yüksek Lisans Dersleri",
     "renk_kodu": "#FFAD47",
     "drive_link": "https://drive.google.com/...",
-    "ders_adi_en": "UZM 517E"
+    "ders_adi_en": "Spacecraft Dynamics"
   }
 ]
