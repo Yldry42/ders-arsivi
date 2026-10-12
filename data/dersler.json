@@ -692,5 +692,31 @@
     "renk_kodu": "#FFAD47",
     "drive_link": "https://drive.google.com/...",
     "ders_adi_en": "Engineering Mathematics"
+  },
+  {
+    "id": 54,
+    "kod": "UUM",
+    "no": "621E",
+    "ders_adi": "UUM 621E",
+    "ogretim_uyesi": "-",
+    "donem": "Güz",
+    "yil": "2026-2027",
+    "kategori": "Yüksek Lisans Dersleri",
+    "renk_kodu": "#FFAD47",
+    "drive_link": "https://drive.google.com/...",
+    "ders_adi_en": "UUM 621E"
+  },
+  {
+    "id": 55,
+    "kod": "UZM",
+    "no": "517E",
+    "ders_adi": "UZM 517E",
+    "ogretim_uyesi": "-",
+    "donem": "Güz",
+    "yil": "2026-2027",
+    "kategori": "Yüksek Lisans Dersleri",
+    "renk_kodu": "#FFAD47",
+    "drive_link": "https://drive.google.com/...",
+    "ders_adi_en": "UZM 517E"
   }
 ]
