@@ -505,7 +505,7 @@ const previewableExtensions = [...pdfPreviewExtensions, ...textPreviewExtensions
 const getPdfPreviewSource = (previewUrl: string, zoom: number, searchQuery: string, fitPage = false) => {
   const params = [`toolbar=0`, `navpanes=0`];
   if (fitPage) {
-    params.push('view=Fit');
+    params.push(`zoom=page-fit`);
   } else {
     params.push(`zoom=${zoom}`);
   }
@@ -859,8 +859,8 @@ export default function Home() {
     const originalExtension = archivePreview ? getFileExtension(archivePreview.ad) : '';
     const isConvertedOfficePdf = archivePreview?.uzanti === 'pdf' && ['doc', 'docx', 'ppt', 'pptx'].includes(originalExtension);
 
-    setArchivePreviewZoom(isConvertedOfficePdf ? 70 : 100);
-    setArchivePreviewFit(true);
+    setArchivePreviewZoom(isConvertedOfficePdf ? 70 : 30);
+    setArchivePreviewFit(false);
     setArchivePreviewSearch('');
     setArchivePreviewMode(isConvertedOfficePdf ? 'office' : 'pdf');
     setIsArchivePreviewClosing(false);
@@ -3161,30 +3161,33 @@ export default function Home() {
                       type="button"
                       onClick={() => {
                         setArchivePreviewFit(false);
-                        setArchivePreviewZoom((zoom) => Math.max(25, zoom - 10));
+                        setArchivePreviewZoom((zoom) => Math.max(5, zoom - 5));
                       }}
                       className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-semibold text-slate-700 transition hover:bg-white hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
-                      disabled={archivePreviewZoom <= 25}
+                      disabled={!archivePreviewFit && archivePreviewZoom <= 5}
                       aria-label="Uzaklaştır"
                     >
                       −
                     </button>
                     <button
                       type="button"
-                      onClick={() => setArchivePreviewFit(true)}
+                      onClick={() => {
+                        setArchivePreviewFit(false);
+                        setArchivePreviewZoom(30);
+                      }}
                       className="min-w-16 rounded-full px-2 text-center text-xs font-bold tabular-nums text-slate-600 transition hover:bg-white hover:shadow-sm dark:text-slate-300 dark:hover:bg-slate-800"
-                      title={language === 'tr' ? 'Sayfaya sığdır' : 'Fit to page'}
+                      title={language === 'tr' ? 'Varsayılan görünüme dön' : 'Reset view'}
                     >
-                      {archivePreviewFit ? (language === 'tr' ? 'Sığdır' : 'Fit') : `${archivePreviewZoom}%`}
+                      {`${archivePreviewZoom}%`}
                     </button>
                     <button
                       type="button"
                       onClick={() => {
                         setArchivePreviewFit(false);
-                        setArchivePreviewZoom((zoom) => Math.min(180, zoom + 10));
+                        setArchivePreviewZoom((zoom) => Math.min(220, zoom + 5));
                       }}
                       className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-semibold text-slate-700 transition hover:bg-white hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
-                      disabled={archivePreviewZoom >= 180}
+                      disabled={!archivePreviewFit && archivePreviewZoom >= 220}
                       aria-label="Yakınlaştır"
                     >
                       +
