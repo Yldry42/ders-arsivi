@@ -22,7 +22,23 @@ const onlyArg = process.argv.find((arg) => arg.startsWith('--only='));
 const onlyCodes = onlyArg
   ? new Set(onlyArg.replace('--only=', '').split(',').map((code) => code.trim()).filter(Boolean))
   : null;
-const multiCrnSumCourseCodes = new Set(['UZB419E', 'UZB420E']);
+const multiCrnSumCourseCodes = new Set(['UZB419E', 'UZB420E', 'UZB415E', 'UZB416E']);
+const courseCodeAliases = {
+  UZB419E: [
+    {
+      code: 'UZB415E',
+      name: 'Spacecraft Systems Design I',
+      note: 'Eski kod: UZB415E',
+    },
+  ],
+  UZB420E: [
+    {
+      code: 'UZB416E',
+      name: 'Spacecraft Systems Design II',
+      note: 'Eski kod: UZB416E',
+    },
+  ],
+};
 
 function normalizeCourseCode(value) {
   return String(value ?? '').replace(/\s+/g, '').trim();
@@ -30,6 +46,10 @@ function normalizeCourseCode(value) {
 
 function normalizeCourseFamily(value) {
   return normalizeCourseCode(value).replace(/E$/, '');
+}
+
+function getBranchCode(courseCode) {
+  return String(courseCode).match(/^[A-Z]+/)?.[0] ?? '';
 }
 
 function normalizeName(value) {
@@ -297,52 +317,66 @@ for (const course of targetCourses) {
   const courseCode = normalizeCourseCode(`${course.kod}${course.no}`);
   const expectedInstructor = normalizeName(course.ogretim_uyesi);
   const hits = [];
+  const candidateCodes = [
+    { code: courseCode, aliasNote: '', aliasName: '' },
+    ...(courseCodeAliases[courseCode] ?? []).map((alias) => ({
+      code: normalizeCourseCode(alias.code),
+      aliasNote: alias.note ?? `Eski kod: ${normalizeCourseCode(alias.code)}`,
+      aliasName: alias.name ?? '',
+    })),
+  ];
 
   for (const snapshot of dates) {
-    const rows = await fetchArchiveRows(snapshot.value, course.kod);
-    const sameFamilyMatches = rows.filter((row) => normalizeCourseFamily(row['Course Code']) === normalizeCourseFamily(courseCode));
-    const matches = sameFamilyMatches.filter((row) => normalizeCourseCode(row['Course Code']) === courseCode);
-    const titleMatches = titleAliases
-      ? rows.filter((row) => titleMatchesCourse(row['Course Title'], course))
-      : [];
+    for (const candidate of candidateCodes) {
+      const sourceCourseCode = candidate.code;
+      const branchCode = getBranchCode(sourceCourseCode);
+      const rows = await fetchArchiveRows(snapshot.value, branchCode);
+      const sameFamilyMatches = rows.filter((row) => normalizeCourseFamily(row['Course Code']) === normalizeCourseFamily(sourceCourseCode));
+      const matches = sameFamilyMatches.filter((row) => normalizeCourseCode(row['Course Code']) === sourceCourseCode);
+      const titleMatches = titleAliases && !candidate.aliasNote
+        ? rows.filter((row) => titleMatchesCourse(row['Course Title'], course))
+        : [];
 
-    let rowsForHit = [];
-    let matchType = '';
+      let rowsForHit = [];
+      let matchType = '';
 
-    if (sameFamilyMatches.length === 1 && matches.length === 1) {
-      rowsForHit = [matches[0]];
-      matchType = 'code';
-    } else if (
-      multiCrnSumCourseCodes.has(courseCode) &&
-      matches.length > 1 &&
-      matches.length === sameFamilyMatches.length
-    ) {
-      rowsForHit = matches;
-      matchType = 'multi-crn';
-    } else if (!sameFamilyMatches.length && titleMatches.length === 1) {
-      rowsForHit = [titleMatches[0]];
-      matchType = 'title';
+      if (sameFamilyMatches.length === 1 && matches.length === 1) {
+        rowsForHit = [matches[0]];
+        matchType = candidate.aliasNote ? 'alias-code' : 'code';
+      } else if (
+        multiCrnSumCourseCodes.has(sourceCourseCode) &&
+        matches.length > 1 &&
+        matches.length === sameFamilyMatches.length
+      ) {
+        rowsForHit = matches;
+        matchType = candidate.aliasNote ? 'alias-multi-crn' : 'multi-crn';
+      } else if (!sameFamilyMatches.length && titleMatches.length === 1) {
+        rowsForHit = [titleMatches[0]];
+        matchType = 'title';
+      }
+
+      if (!rowsForHit.length) continue;
+
+      const instructors = [...new Set(rowsForHit.map((row) => normalizeName(row.Instructor)).filter(Boolean))];
+      if (instructors.length !== 1 || instructors[0] !== expectedInstructor) continue;
+
+      const enrolled = rowsForHit.reduce((sum, row) => sum + parseEnrollment(row.Enrolled), 0);
+      if (enrolled < minEnrollment) continue;
+      const sourceCodes = [...new Set(rowsForHit.map((row) => normalizeCourseCode(row['Course Code'])).filter(Boolean))];
+
+      hits.push({
+        snapshot: snapshot.value,
+        term: termFromSnapshot(snapshot.value),
+        sourceCode: sourceCodes[0] ?? sourceCourseCode,
+        matchType,
+        aliasNote: candidate.aliasNote,
+        aliasName: candidate.aliasName,
+        crn: rowsForHit.map((row) => row.CRN).filter(Boolean).join('+'),
+        title: rowsForHit[0]['Course Title'],
+        instructor: rowsForHit[0].Instructor,
+        enrolled,
+      });
     }
-
-    if (!rowsForHit.length) continue;
-
-    const instructors = [...new Set(rowsForHit.map((row) => normalizeName(row.Instructor)).filter(Boolean))];
-    if (instructors.length !== 1 || instructors[0] !== expectedInstructor) continue;
-
-    const enrolled = rowsForHit.reduce((sum, row) => sum + parseEnrollment(row.Enrolled), 0);
-    if (enrolled < minEnrollment) continue;
-    const sourceCodes = [...new Set(rowsForHit.map((row) => normalizeCourseCode(row['Course Code'])).filter(Boolean))];
-
-    hits.push({
-      snapshot: snapshot.value,
-      term: termFromSnapshot(snapshot.value),
-      sourceCode: sourceCodes[0] ?? courseCode,
-      matchType,
-      crn: rowsForHit.map((row) => row.CRN).filter(Boolean).join('+'),
-      title: rowsForHit[0]['Course Title'],
-      instructor: rowsForHit[0].Instructor,
-      enrolled,
-    });
   }
 
   if (hits.length) {
@@ -404,7 +438,7 @@ if (writeAccepted) {
       akademisyen: item.instructor,
       yil: hit.obs.year,
       donem: hit.obs.term,
-      etiket: '',
+      etiket: hit.aliasNote ?? '',
       dagilim: hit.obs.distribution,
     }))
   );
@@ -441,6 +475,7 @@ if (compact) {
           instructor: item.instructor,
           sourceCode: hit.sourceCode ?? item.code,
           matchType: hit.matchType ?? 'code',
+          aliasNote: hit.aliasNote ?? '',
           term: hit.obs?.year && hit.obs?.term ? `${hit.obs.year} ${hit.obs.term}` : hit.term,
           snapshot: hit.snapshot,
           crn: hit.crn,

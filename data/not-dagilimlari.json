@@ -1843,6 +1843,81 @@
         "FF": 2,
         "VF": 1
       }
+    },
+    {
+      "ders_kodu": "UZB419E",
+      "ders_adi": "Uzay Aracı Sistem Tasarımı I",
+      "akademisyen": "Alim Rüstem Aslan",
+      "yil": "2023-2024",
+      "donem": "Güz",
+      "etiket": "Eski kod: UZB415E",
+      "dagilim": {
+        "AA": 3,
+        "BA+": 1,
+        "BA": 2,
+        "BB+": 11,
+        "BB": 6,
+        "CB+": 6,
+        "CB": 15,
+        "CC+": 6,
+        "CC": 18,
+        "DC+": 7,
+        "DC": 8,
+        "DD+": 3,
+        "DD": 2,
+        "FF": 0,
+        "VF": 2
+      }
+    },
+    {
+      "ders_kodu": "UZB420E",
+      "ders_adi": "Uzay Aracı Sistem Tasarımı II",
+      "akademisyen": "Alim Rüstem Aslan",
+      "yil": "2022-2023",
+      "donem": "Bahar",
+      "etiket": "Eski kod: UZB416E",
+      "dagilim": {
+        "AA": 71,
+        "BA+": 0,
+        "BA": 5,
+        "BB+": 0,
+        "BB": 7,
+        "CB+": 0,
+        "CB": 1,
+        "CC+": 0,
+        "CC": 0,
+        "DC+": 0,
+        "DC": 1,
+        "DD+": 0,
+        "DD": 1,
+        "FF": 1,
+        "VF": 0
+      }
+    },
+    {
+      "ders_kodu": "UZB420E",
+      "ders_adi": "Uzay Aracı Sistem Tasarımı II",
+      "akademisyen": "Alim Rüstem Aslan",
+      "yil": "2023-2024",
+      "donem": "Bahar",
+      "etiket": "Eski kod: UZB416E",
+      "dagilim": {
+        "AA": 16,
+        "BA+": 61,
+        "BA": 2,
+        "BB+": 0,
+        "BB": 0,
+        "CB+": 0,
+        "CB": 0,
+        "CC+": 0,
+        "CC": 0,
+        "DC+": 0,
+        "DC": 0,
+        "DD+": 0,
+        "DD": 0,
+        "FF": 1,
+        "VF": 0
+      }
     }
   ]
 }
