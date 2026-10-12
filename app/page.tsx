@@ -694,6 +694,11 @@ export default function Home() {
   const [feedbackStatus, setFeedbackStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const [isFeedbackClosing, setIsFeedbackClosing] = useState(false);
   const headerSentinelRef = useRef<HTMLDivElement | null>(null);
+  const headerLogoSrc = theme === 'dark' ? '/itu-logo-dark.png' : '/itu-logo.png';
+
+  useEffect(() => {
+    setLogoFailed(false);
+  }, [headerLogoSrc]);
 
   const contactEmails = ['yildiray.cankaya5542@gmail.com', 'cankayay21@itu.edu.tr'];
   const getGmailComposeUrl = (email: string) =>
@@ -1882,7 +1887,7 @@ export default function Home() {
               <div className="flex h-14 w-14 shrink-0 items-center justify-center sm:h-16 sm:w-16">
                 {!logoFailed ? (
                   <img
-                    src="/itu-logo.png"
+                    src={headerLogoSrc}
                     alt="İstanbul Teknik Üniversitesi"
                     className="h-full w-full object-contain"
                     onError={() => setLogoFailed(true)}

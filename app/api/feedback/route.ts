@@ -62,7 +62,6 @@ export async function POST(request: Request) {
     body: JSON.stringify({
       title,
       body,
-      labels: ['feedback'],
     }),
   });
 
