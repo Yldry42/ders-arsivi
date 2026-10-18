@@ -8,6 +8,7 @@ import notSahipleriVerileri from '../data/not-sahipleri.json';
 import notDagilimlariVerileri from '../data/not-dagilimlari.json';
 import PptxBrowserPreview from './PptxBrowserPreview';
 import DocxBrowserPreview from './DocxBrowserPreview';
+import { JourneyBackdrop, JourneyFinalScene, JourneyProgress, NightSpaceBackdrop } from './SpaceJourney';
 
 const PdfBrowserPreview = dynamic(() => import('./PdfBrowserPreview'), { ssr: false });
 
@@ -1146,7 +1147,7 @@ export default function Home() {
       <article
         key={ders.id}
         onClick={(event) => openModal(event, ders.id)}
-        className="flex h-48 w-full min-w-0 transform-gpu flex-col overflow-hidden rounded-3xl border p-5 shadow-sm transition [contain-intrinsic-size:20rem] [content-visibility:auto] hover:-translate-y-1 hover:shadow-lg cursor-pointer dark:border-slate-700"
+        className="course-card flex h-48 w-full min-w-0 transform-gpu flex-col overflow-hidden rounded-3xl border p-5 shadow-sm transition [contain-intrinsic-size:20rem] [content-visibility:auto] hover:-translate-y-1 hover:shadow-lg cursor-pointer dark:border-slate-700"
         style={{ borderColor: accentColor, backgroundColor: getCardBackground(accentColor) }}
       >
         <div className="flex items-start justify-between gap-3">
@@ -1881,10 +1882,21 @@ export default function Home() {
     };
   }, [isInstructorInputFocused, instructorQuery, instructorSuggestions]);
 
+  const showJourney = isMounted && theme === 'light' && selectedCategory === 'all' && !searchQuery && !instructorQuery && !selectedInstructor;
+  const showNightSpace = isMounted && theme === 'dark';
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('journey-scroll-active', showJourney);
+    return () => document.documentElement.classList.remove('journey-scroll-active');
+  }, [showJourney]);
+
   return (
-    <main className="relative isolate min-h-screen px-4 py-5 sm:px-6 sm:py-10 max-w-7xl mx-auto bg-[var(--background)] text-[var(--foreground)] transition-colors duration-300">
-      <div className="sticky top-0 z-30 -mx-4 mb-5 bg-[var(--background)]/95 px-4 pb-3 pt-2 backdrop-blur-md sm:-mx-6 sm:mb-6 sm:px-6 sm:pb-4">
-        <div className="mx-auto h-[6.75rem] max-w-7xl overflow-visible rounded-3xl border border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-950/90 sm:h-[7.25rem]">
+    <main className={`${showJourney ? 'journey-active' : ''} ${showNightSpace ? 'journey-night-active' : ''} relative isolate min-h-screen px-4 py-5 sm:px-6 sm:py-10 max-w-7xl mx-auto bg-[var(--background)] text-[var(--foreground)] transition-colors duration-300`}>
+      {showJourney ? <JourneyBackdrop /> : null}
+      {showNightSpace ? <NightSpaceBackdrop /> : null}
+      {showJourney ? <JourneyProgress /> : null}
+      <div className="sticky top-0 z-30 -mx-4 mb-5 bg-transparent px-4 pb-3 pt-2 sm:-mx-6 sm:mb-6 sm:px-6 sm:pb-4">
+        <div className="mx-auto h-[6.75rem] max-w-7xl overflow-visible rounded-full border border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-950/90 sm:h-[7.25rem]">
           <div className="flex h-full items-start justify-between gap-3 p-4 sm:p-5 md:items-center">
             <div className="flex min-w-0 items-center gap-3 sm:gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center sm:h-16 sm:w-16">
@@ -2005,7 +2017,7 @@ export default function Home() {
         </div>
       </div>
 
-        <div className="relative z-0 mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+        <div className="relative z-10 mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
           <section className="min-w-0">
             <div className="relative mb-5 max-w-md">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
@@ -2194,7 +2206,9 @@ export default function Home() {
           </aside>
         </div>
 
-      <footer className="mt-14 rounded-3xl border border-slate-200/80 bg-white/80 p-6 shadow-sm backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-950/80 sm:p-8">
+      {showJourney ? <JourneyFinalScene /> : null}
+
+      <footer className={`${showJourney ? 'mt-0' : 'mt-14'} relative z-10 rounded-3xl border border-slate-200/80 bg-white/80 p-6 shadow-sm backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-950/80 sm:p-8`}>
         <div className="grid gap-6 md:grid-cols-2 md:items-start">
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">

@@ -166,6 +166,7 @@ html[data-theme="dark"] {
 
 html {
   scrollbar-gutter: stable;
+  overflow-x: clip;
   transition: background-color 140ms ease-out, color 140ms ease-out;
 }
 
@@ -208,6 +209,143 @@ html[data-theme="light"] body {
 
 .course-modal-scrollbar::-webkit-scrollbar-corner {
   background: var(--course-modal-scrollbar-track);
+}
+
+/* The journey is decorative: it stays behind the cards and never intercepts input. */
+.journey-backdrop,
+.journey-final-scene {
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+}
+
+.journey-backdrop--descent {
+  background: linear-gradient(to bottom,
+    #dbe3ee 0%,
+    #dee8f3 15%,
+    #d9eff0 30%,
+    #deedf3 45%,
+    #e7f1f3 58%,
+    #e2efee 73%,
+    #e1f0e7 88%,
+    #e8f4ec 100%);
+}
+
+.journey-backdrop--night {
+  background:
+    radial-gradient(ellipse at 12% 12%, rgb(45 91 157 / 27%), transparent 43%),
+    radial-gradient(ellipse at 82% 67%, rgb(22 92 136 / 16%), transparent 40%),
+    linear-gradient(to bottom, #0b1934 0%, #101d39 45%, #08162d 100%);
+}
+
+.journey-night-stars {
+  background-image:
+    radial-gradient(circle, rgb(215 235 255 / 58%) 1px, transparent 1.5px),
+    radial-gradient(circle, rgb(177 220 255 / 35%) 1px, transparent 1.5px),
+    radial-gradient(circle, rgb(235 247 255 / 30%) 1.5px, transparent 2px);
+  background-position: 14px 27px, 67px 92px, 144px 183px;
+  background-size: 131px 157px, 223px 197px, 349px 283px;
+  opacity: 0.35;
+}
+
+.journey-active .course-card {
+  background-image: linear-gradient(rgb(255 255 255 / 64%), rgb(255 255 255 / 64%));
+  backdrop-filter: blur(8px);
+}
+
+.journey-night-active .course-card {
+  background-image: linear-gradient(rgb(5 12 27 / 64%), rgb(5 12 27 / 64%));
+  backdrop-filter: blur(8px);
+}
+
+.journey-active footer {
+  margin-top: -clamp(2rem, 5vw, 4rem);
+  background: linear-gradient(135deg, rgb(236 248 241 / 82%), rgb(220 239 245 / 78%) 62%, rgb(224 244 232 / 82%));
+}
+
+.journey-space-scene .journey-scenery {
+  opacity: 0.19;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 57%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 57%, transparent 100%);
+}
+
+.journey-atmosphere-scene {
+  background:
+    radial-gradient(ellipse 77% 16% at 52% 17%, rgb(89 205 163 / 22%), transparent 77%),
+    radial-gradient(ellipse 87% 19% at 48% 29%, rgb(75 181 207 / 17%), transparent 78%),
+    radial-gradient(ellipse 110% 27% at 51% 77%, rgb(133 202 230 / 15%), transparent 80%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 15%, #000 78%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 15%, #000 78%, transparent);
+}
+
+.journey-atmosphere-scene::before {
+  position: absolute;
+  inset: 7% -8% auto;
+  height: 24%;
+  content: '';
+  border-radius: 50%;
+  border-top: clamp(1rem, 3vw, 3rem) solid rgb(111 210 177 / 12%);
+  transform: rotate(-5deg);
+  filter: blur(18px);
+}
+
+.journey-observatory-scene .journey-scenery {
+  opacity: 0.22;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 19%, #000 70%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 19%, #000 70%, transparent 100%);
+}
+
+.journey-final-scene img {
+  opacity: 0.46;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 86%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 86%, transparent 100%);
+}
+
+.journey-astronaut { opacity: 0.65; }
+.journey-turksat { opacity: 0.68; }
+.journey-gokturk { opacity: 0.64; }
+.journey-meteor { opacity: 0.47; filter: saturate(0.82); }
+.journey-night-sprite { opacity: 0.24; }
+
+@keyframes journeyFloat {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-3deg); }
+  50% { transform: translate3d(9px, -13px, 0) rotate(3deg); }
+}
+
+.journey-float {
+  animation: journeyFloat 9s ease-in-out infinite;
+  will-change: transform;
+}
+
+.journey-float-late { animation-delay: -3s; }
+.journey-float-slow { animation-duration: 12s; animation-delay: -6s; }
+
+.journey-meteor-one { animation: journeyFloat 10s ease-in-out -2s infinite; }
+.journey-meteor-two { animation: journeyFloat 12s ease-in-out -7s infinite; }
+.journey-meteor-three { animation: journeyFloat 9s ease-in-out -4s infinite; }
+
+@media (min-width: 768px) {
+  html.journey-scroll-active {
+    scrollbar-width: none;
+    scrollbar-gutter: auto;
+  }
+
+  html.journey-scroll-active::-webkit-scrollbar { display: none; }
+}
+
+@media (max-width: 639px) {
+  .journey-astronaut { left: 0; top: 22rem; width: 4.5rem; }
+  .journey-turksat { right: 0; top: 33rem; width: 8rem; }
+  .journey-gokturk { right: 3%; top: 52rem; width: 5.5rem; }
+  .journey-space-scene .journey-scenery { opacity: 0.13; }
+  .journey-observatory-scene .journey-scenery { opacity: 0.15; }
+  .journey-meteor { opacity: 0.3; }
+  .journey-night-sprite { opacity: 0.16; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .journey-float, .journey-meteor { animation: none; will-change: auto; }
+  .journey-progress-thumb { transition: none; }
 }
 
 /* Smooth button transitions */
