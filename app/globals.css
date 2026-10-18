@@ -21,6 +21,8 @@ html[data-theme="dark"] {
   color-scheme: dark;
 }
 
+html { scrollbar-gutter: stable; }
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -212,8 +214,7 @@ html[data-theme="light"] body {
 }
 
 /* The journey is decorative: it stays behind the cards and never intercepts input. */
-.journey-backdrop,
-.journey-final-scene {
+.journey-backdrop {
   left: 50%;
   width: 100vw;
   transform: translateX(-50%);
@@ -229,6 +230,12 @@ html[data-theme="light"] body {
     #e2efee 73%,
     #e1f0e7 88%,
     #e8f4ec 100%);
+}
+
+.journey-backdrop--space-only {
+  background:
+    radial-gradient(ellipse at 15% 8%, rgb(125 193 225 / 15%), transparent 42%),
+    linear-gradient(to bottom, #dbe3ee 0%, #e3eaf5 55%, #e8eef7 100%);
 }
 
 .journey-backdrop--night {
@@ -248,7 +255,10 @@ html[data-theme="light"] body {
   opacity: 0.35;
 }
 
-.journey-active .course-card {
+.journey-day-stars { opacity: 0.2; }
+
+.journey-active .course-card,
+.journey-space-active .course-card {
   background-image: linear-gradient(rgb(255 255 255 / 64%), rgb(255 255 255 / 64%));
   backdrop-filter: blur(8px);
 }
@@ -260,7 +270,7 @@ html[data-theme="light"] body {
 
 .journey-active footer {
   margin-top: -clamp(2rem, 5vw, 4rem);
-  background: linear-gradient(135deg, rgb(236 248 241 / 82%), rgb(220 239 245 / 78%) 62%, rgb(224 244 232 / 82%));
+  background: linear-gradient(135deg, rgb(237 248 244 / 66%), rgb(224 242 248 / 61%) 62%, rgb(226 244 232 / 65%));
 }
 
 .journey-space-scene .journey-scenery {
@@ -289,23 +299,25 @@ html[data-theme="light"] body {
   filter: blur(18px);
 }
 
-.journey-observatory-scene .journey-scenery {
-  opacity: 0.22;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 19%, #000 70%, transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 19%, #000 70%, transparent 100%);
-}
-
-.journey-final-scene img {
-  opacity: 0.46;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 86%, transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 86%, transparent 100%);
+.journey-earth-scene img {
+  opacity: 0.34;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 9%, #000 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 9%, #000 100%);
 }
 
 .journey-astronaut { opacity: 0.65; }
 .journey-turksat { opacity: 0.68; }
 .journey-gokturk { opacity: 0.64; }
+.journey-cubesat { opacity: 0.72; }
+.journey-nanosat { opacity: 0.62; }
+.journey-gold-satellite { opacity: 0.62; }
 .journey-meteor { opacity: 0.47; filter: saturate(0.82); }
-.journey-night-sprite { opacity: 0.24; }
+.journey-backdrop--night .journey-astronaut,
+.journey-backdrop--night .journey-turksat,
+.journey-backdrop--night .journey-gokturk,
+.journey-backdrop--night .journey-cubesat,
+.journey-backdrop--night .journey-nanosat,
+.journey-backdrop--night .journey-gold-satellite { opacity: 0.24; }
 
 @keyframes journeyFloat {
   0%, 100% { transform: translate3d(0, 0, 0) rotate(-3deg); }
@@ -326,21 +338,41 @@ html[data-theme="light"] body {
 
 @media (min-width: 768px) {
   html.journey-scroll-active {
-    scrollbar-width: none;
-    scrollbar-gutter: auto;
+    scrollbar-color: transparent transparent;
   }
 
-  html.journey-scroll-active::-webkit-scrollbar { display: none; }
+  html.journey-scroll-active::-webkit-scrollbar-thumb,
+  html.journey-scroll-active::-webkit-scrollbar-track { background: transparent; }
 }
 
 @media (max-width: 639px) {
   .journey-astronaut { left: 0; top: 22rem; width: 4.5rem; }
   .journey-turksat { right: 0; top: 33rem; width: 8rem; }
-  .journey-gokturk { right: 3%; top: 52rem; width: 5.5rem; }
+  .journey-gokturk { right: 3%; top: 43rem; width: 5.5rem; }
+  .journey-cubesat { left: 5%; top: 47rem; width: 2rem; }
+  .journey-nanosat { right: 22%; top: 49rem; width: 6rem; }
+  .journey-gold-satellite { left: 5%; top: 52rem; width: 5.5rem; }
+  .journey-space-active footer,
+  .journey-night-active footer { margin-top: 14rem; }
   .journey-space-scene .journey-scenery { opacity: 0.13; }
-  .journey-observatory-scene .journey-scenery { opacity: 0.15; }
+  .journey-earth-scene img {
+    top: auto;
+    bottom: 16rem;
+    height: 88rem;
+    object-fit: cover;
+    object-position: 64% center;
+    opacity: 0.22;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 88%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 88%, transparent 100%);
+  }
+  .journey-final-scene { height: 30rem; }
   .journey-meteor { opacity: 0.3; }
-  .journey-night-sprite { opacity: 0.16; }
+  .journey-backdrop--night .journey-astronaut,
+  .journey-backdrop--night .journey-turksat,
+  .journey-backdrop--night .journey-gokturk,
+  .journey-backdrop--night .journey-cubesat,
+  .journey-backdrop--night .journey-nanosat,
+  .journey-backdrop--night .journey-gold-satellite { opacity: 0.16; }
 }
 
 @media (prefers-reduced-motion: reduce) {

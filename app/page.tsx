@@ -8,7 +8,7 @@ import notSahipleriVerileri from '../data/not-sahipleri.json';
 import notDagilimlariVerileri from '../data/not-dagilimlari.json';
 import PptxBrowserPreview from './PptxBrowserPreview';
 import DocxBrowserPreview from './DocxBrowserPreview';
-import { JourneyBackdrop, JourneyFinalScene, JourneyProgress, NightSpaceBackdrop } from './SpaceJourney';
+import { JourneyBackdrop, JourneyFinalScene, JourneyProgress, NightSpaceBackdrop, SpaceOnlyBackdrop } from './SpaceJourney';
 
 const PdfBrowserPreview = dynamic(() => import('./PdfBrowserPreview'), { ssr: false });
 
@@ -1883,6 +1883,7 @@ export default function Home() {
   }, [isInstructorInputFocused, instructorQuery, instructorSuggestions]);
 
   const showJourney = isMounted && theme === 'light' && selectedCategory === 'all' && !searchQuery && !instructorQuery && !selectedInstructor;
+  const showSpaceOnly = isMounted && theme === 'light' && !showJourney;
   const showNightSpace = isMounted && theme === 'dark';
 
   useEffect(() => {
@@ -1891,15 +1892,16 @@ export default function Home() {
   }, [showJourney]);
 
   return (
-    <main className={`${showJourney ? 'journey-active' : ''} ${showNightSpace ? 'journey-night-active' : ''} relative isolate min-h-screen px-4 py-5 sm:px-6 sm:py-10 max-w-7xl mx-auto bg-[var(--background)] text-[var(--foreground)] transition-colors duration-300`}>
+    <main className={`${showJourney ? 'journey-active' : ''} ${showSpaceOnly ? 'journey-space-active' : ''} ${showNightSpace ? 'journey-night-active' : ''} relative isolate min-h-screen w-full max-w-7xl mx-auto px-4 py-5 sm:px-6 sm:py-10 bg-[var(--background)] text-[var(--foreground)] transition-colors duration-300`}>
       {showJourney ? <JourneyBackdrop /> : null}
+      {showSpaceOnly ? <SpaceOnlyBackdrop /> : null}
       {showNightSpace ? <NightSpaceBackdrop /> : null}
       {showJourney ? <JourneyProgress /> : null}
       <div className="sticky top-0 z-30 -mx-4 mb-5 bg-transparent px-4 pb-3 pt-2 sm:-mx-6 sm:mb-6 sm:px-6 sm:pb-4">
-        <div className="mx-auto h-[6.75rem] max-w-7xl overflow-visible rounded-full border border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-950/90 sm:h-[7.25rem]">
-          <div className="flex h-full items-start justify-between gap-3 p-4 sm:p-5 md:items-center">
-            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center sm:h-16 sm:w-16">
+        <div className="site-header mx-auto h-[9.5rem] max-w-7xl overflow-visible rounded-[2.5rem] border border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-950/90 sm:h-[7.25rem] sm:rounded-full">
+          <div className="flex h-full flex-col justify-center gap-2 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-5">
+            <div className="flex w-full min-w-0 items-center gap-3 sm:w-auto sm:flex-1 sm:gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center sm:h-16 sm:w-16">
                 {!logoFailed ? (
                   <img
                     src={headerLogoSrc}
@@ -1913,8 +1915,8 @@ export default function Home() {
                   </span>
                 )}
               </div>
-              <div className="min-w-0 w-[min(52vw,34rem)] sm:w-[min(58vw,42rem)] lg:w-[42rem]">
-                <h1 className="min-h-[3.1rem] overflow-hidden text-xl font-semibold leading-tight text-slate-900 dark:text-white sm:min-h-[2.55rem] sm:text-3xl" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+              <div className="min-w-0 flex-1">
+                <h1 className="h-12 overflow-hidden text-lg font-semibold leading-snug text-slate-900 dark:text-white sm:h-[2.55rem] sm:text-3xl sm:leading-tight" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                   {locale.title}
                 </h1>
                 <p className="mt-1 hidden h-5 max-w-2xl overflow-hidden whitespace-nowrap text-sm text-slate-600 dark:text-slate-400 sm:block">
