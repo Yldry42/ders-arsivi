@@ -1,5 +1,6 @@
 'use client';
 import { CSSProperties, MouseEvent, ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import dersler from '../data/dersler.json';
 import akademisyenVerileri from '../data/akademisyen.json';
 import arsivVerileri from '../data/arsiv.json';
@@ -7,6 +8,8 @@ import notSahipleriVerileri from '../data/not-sahipleri.json';
 import notDagilimlariVerileri from '../data/not-dagilimlari.json';
 import PptxBrowserPreview from './PptxBrowserPreview';
 import DocxBrowserPreview from './DocxBrowserPreview';
+
+const PdfBrowserPreview = dynamic(() => import('./PdfBrowserPreview'), { ssr: false });
 
 type Ders = {
   id: number;
@@ -506,18 +509,6 @@ const docxPreviewExtensions = ['docx'];
 const pptxPreviewExtensions = ['pptx'];
 const previewableExtensions = [...pdfPreviewExtensions, ...textPreviewExtensions, ...imagePreviewExtensions, ...documentPreviewExtensions, ...docxPreviewExtensions, ...pptxPreviewExtensions];
 
-const getPdfPreviewSource = (previewUrl: string, zoom: number, searchQuery: string, fitPage = false) => {
-  const params = [`toolbar=0`, `navpanes=0`];
-  if (fitPage) {
-    params.push(`zoom=page-fit`);
-  } else {
-    params.push(`zoom=${zoom}`);
-  }
-  const query = searchQuery.trim();
-  if (query) params.push(`search=${encodeURIComponent(query)}`);
-  return `${previewUrl}#${params.join('&')}`;
-};
-
 const documentPreviewVersion = '2026-08-22-slide-preview';
 
 const getDocumentPreviewSource = (fileUrl: string, fileName: string, zoom: number, searchQuery: string) =>
@@ -685,6 +676,8 @@ export default function Home() {
   const [archivePreview, setArchivePreview] = useState<ArsivOnizleme | null>(null);
   const [archivePreviewZoom, setArchivePreviewZoom] = useState(100);
   const [archivePreviewFit, setArchivePreviewFit] = useState(true);
+  const [archivePreviewEffectiveZoom, setArchivePreviewEffectiveZoom] = useState(100);
+  const [archivePreviewZoomMenuOpen, setArchivePreviewZoomMenuOpen] = useState(false);
   const [archivePreviewSearch, setArchivePreviewSearch] = useState('');
   const [archivePreviewMode, setArchivePreviewMode] = useState<'office' | 'pdf'>('pdf');
   const [isArchivePreviewClosing, setIsArchivePreviewClosing] = useState(false);
@@ -868,13 +861,16 @@ export default function Home() {
   }, [selectedDersId]);
 
   useEffect(() => {
-    const originalExtension = archivePreview ? getFileExtension(archivePreview.ad) : '';
-    const isConvertedOfficePdf = archivePreview?.uzanti === 'pdf' && ['doc', 'docx', 'ppt', 'pptx'].includes(originalExtension);
-
-    setArchivePreviewZoom(isConvertedOfficePdf ? 70 : 30);
-    setArchivePreviewFit(false);
+    setArchivePreviewZoom(100);
+    setArchivePreviewEffectiveZoom(100);
+    setArchivePreviewFit(true);
+    setArchivePreviewZoomMenuOpen(false);
     setArchivePreviewSearch('');
-    setArchivePreviewMode(isConvertedOfficePdf ? 'office' : 'pdf');
+    setArchivePreviewMode(
+      archivePreview?.uzanti === 'pdf' && ['doc', 'docx', 'ppt', 'pptx'].includes(getFileExtension(archivePreview.ad))
+        ? 'office'
+        : 'pdf',
+    );
     setIsArchivePreviewClosing(false);
   }, [archivePreview]);
 
@@ -3103,6 +3099,8 @@ export default function Home() {
         (() => {
           const originalPreviewExtension = getFileExtension(archivePreview.ad);
           const isConvertedOfficePdf = archivePreview.uzanti === 'pdf' && ['doc', 'docx', 'ppt', 'pptx'].includes(originalPreviewExtension);
+          const isOfficeView = isConvertedOfficePdf && archivePreviewMode === 'office';
+          const displayedPreviewZoom = archivePreviewFit ? archivePreviewEffectiveZoom : archivePreviewZoom;
 
           return (
         <div
@@ -3121,7 +3119,7 @@ export default function Home() {
               <FloatingCloseButton label={locale.close} onClick={closeArchivePreview} />
               <div className="flex flex-col gap-3 pr-14 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <h2 className="break-words text-base font-semibold text-slate-900 dark:text-white sm:text-lg">
+                <h2 title={archivePreview.ad} className="truncate text-base font-semibold text-slate-900 dark:text-white sm:text-lg">
                   {archivePreview.ad}
                 </h2>
                 <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
@@ -3179,13 +3177,13 @@ export default function Home() {
                     ) : null}
                   </label>
                 ) : null}
-                {[...pdfPreviewExtensions, ...documentPreviewExtensions, ...docxPreviewExtensions, ...imagePreviewExtensions, ...pptxPreviewExtensions].includes(archivePreview.uzanti) ? (
-                  <div className="flex h-11 items-center rounded-full border border-slate-200 bg-slate-50/90 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-950/90">
+                {[...pdfPreviewExtensions, ...documentPreviewExtensions, ...docxPreviewExtensions, ...imagePreviewExtensions, ...pptxPreviewExtensions].includes(archivePreview.uzanti) && !isOfficeView ? (
+                  <div className="relative flex h-11 items-center rounded-full border border-slate-200 bg-slate-50/90 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-950/90">
                     <button
                       type="button"
                       onClick={() => {
+                        setArchivePreviewZoom(Math.max(5, displayedPreviewZoom - 10));
                         setArchivePreviewFit(false);
-                        setArchivePreviewZoom((zoom) => Math.max(5, zoom - 5));
                       }}
                       className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-semibold text-slate-700 transition hover:bg-white hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
                       disabled={!archivePreviewFit && archivePreviewZoom <= 5}
@@ -3196,22 +3194,56 @@ export default function Home() {
                     <button
                       type="button"
                       onClick={() => {
-                        setArchivePreviewFit(false);
-                        setArchivePreviewZoom(30);
+                        setArchivePreviewZoomMenuOpen((open) => !open);
                       }}
-                      className="min-w-16 rounded-full px-2 text-center text-xs font-bold tabular-nums text-slate-600 transition hover:bg-white hover:shadow-sm dark:text-slate-300 dark:hover:bg-slate-800"
-                      title={language === 'tr' ? 'Varsayılan görünüme dön' : 'Reset view'}
+                      className="min-w-16 rounded-full px-2 text-center text-xs font-bold tabular-nums text-slate-600 outline-none transition hover:bg-white hover:shadow-sm focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-1 dark:text-slate-300 dark:hover:bg-slate-800 dark:focus-visible:ring-slate-500"
+                      title={language === 'tr' ? 'Yakınlaştırma düzeyini seç' : 'Choose zoom level'}
+                      aria-haspopup="listbox"
+                      aria-expanded={archivePreviewZoomMenuOpen}
                     >
-                      {`${archivePreviewZoom}%`}
+                      {`${displayedPreviewZoom}%`}
+                      <svg aria-hidden="true" viewBox="0 0 20 20" className="ml-1 inline h-3.5 w-3.5 align-[-2px]" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.22 7.47a.75.75 0 0 1 1.06 0L10 11.19l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.53a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                      </svg>
                     </button>
+                    {archivePreviewZoomMenuOpen ? (
+                      <div role="listbox" className="absolute right-0 top-[calc(100%+0.65rem)] z-[80] min-w-32 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                        {[
+                          { label: 'Auto', fit: true, zoom: 100 },
+                          { label: '100%', fit: false, zoom: 100 },
+                          { label: '75%', fit: false, zoom: 75 },
+                          { label: '50%', fit: false, zoom: 50 },
+                          { label: '30%', fit: false, zoom: 30 },
+                        ].map((option) => {
+                          const selected = option.fit ? archivePreviewFit : !archivePreviewFit && archivePreviewZoom === option.zoom;
+                          return (
+                            <button
+                              key={option.label}
+                              type="button"
+                              role="option"
+                              aria-selected={selected}
+                              onClick={() => {
+                                setArchivePreviewFit(option.fit);
+                                setArchivePreviewZoom(option.zoom);
+                                setArchivePreviewZoomMenuOpen(false);
+                              }}
+                              className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs font-semibold transition ${selected ? 'bg-slate-100 text-slate-950 dark:bg-slate-800 dark:text-white' : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/70'}`}
+                            >
+                              {option.label}
+                              {selected ? <span aria-hidden="true">✓</span> : null}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => {
+                        setArchivePreviewZoom(Math.min(300, displayedPreviewZoom + 10));
                         setArchivePreviewFit(false);
-                        setArchivePreviewZoom((zoom) => Math.min(220, zoom + 5));
                       }}
                       className="flex h-9 w-9 items-center justify-center rounded-full text-lg font-semibold text-slate-700 transition hover:bg-white hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800"
-                      disabled={!archivePreviewFit && archivePreviewZoom >= 220}
+                      disabled={!archivePreviewFit && archivePreviewZoom >= 300}
                       aria-label="Yakınlaştır"
                     >
                       +
@@ -3230,15 +3262,30 @@ export default function Home() {
             </div>
 
             <div className="min-h-0 flex-1 bg-slate-100 p-2 dark:bg-slate-950 sm:p-3">
-              {[...pdfPreviewExtensions, ...textPreviewExtensions].includes(archivePreview.uzanti) ? (
+              {archivePreview.uzanti === 'pdf' ? (
+                isOfficeView ? (
+                  <iframe
+                    src={getOfficePreviewSource(archivePreview.url)}
+                    title={archivePreview.ad}
+                    className="h-full w-full rounded-xl border border-slate-200 bg-white dark:border-slate-700"
+                  />
+                ) : (
+                  <PdfBrowserPreview
+                    fileName={archivePreview.ad}
+                    previewUrl={archivePreview.previewUrl}
+                    fit={archivePreviewFit}
+                    zoom={archivePreviewZoom}
+                    searchQuery={archivePreviewSearch}
+                    onZoomChange={(value) => {
+                      setArchivePreviewZoom(value);
+                      setArchivePreviewFit(false);
+                    }}
+                    onFitZoomChange={setArchivePreviewEffectiveZoom}
+                  />
+                )
+              ) : textPreviewExtensions.includes(archivePreview.uzanti) ? (
                 <iframe
-                  src={
-                    archivePreview.uzanti === 'pdf'
-                      ? isConvertedOfficePdf && archivePreviewMode === 'office'
-                        ? getOfficePreviewSource(archivePreview.url)
-                        : getPdfPreviewSource(archivePreview.previewUrl, archivePreviewZoom, archivePreviewSearch, archivePreviewFit)
-                      : archivePreview.previewUrl
-                  }
+                  src={archivePreview.previewUrl}
                   title={archivePreview.ad}
                   className="h-full w-full rounded-xl border border-slate-200 bg-white dark:border-slate-700"
                 />
