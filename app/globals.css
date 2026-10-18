@@ -222,14 +222,88 @@ html[data-theme="light"] body {
 
 .journey-backdrop--descent {
   background: linear-gradient(to bottom,
-    #dbe3ee 0%,
-    #dee8f3 15%,
-    #d9eff0 30%,
-    #deedf3 45%,
-    #e7f1f3 58%,
-    #e2efee 73%,
-    #e1f0e7 88%,
+    #afc1db 0%,
+    #bdcde2 23%,
+    #cbdce9 34%,
+    #dcebef 47%,
+    #e6f0f2 60%,
+    #e2efec 72%,
+    #e1f0e7 87%,
     #e8f4ec 100%);
+}
+
+.journey-deep-sky {
+  height: 42rem;
+  background: url('/journey-space.webp') center top / auto 70rem no-repeat;
+  opacity: 0.18;
+  -webkit-mask-image: linear-gradient(to bottom, #000, #000 45%, transparent 95%);
+  mask-image: linear-gradient(to bottom, #000, #000 45%, transparent 95%);
+}
+
+.journey-deep-stars {
+  height: min(38%, 220rem);
+  background-image:
+    radial-gradient(circle, rgb(255 255 255 / 76%) 1px, transparent 1.5px),
+    radial-gradient(circle, rgb(65 100 150 / 42%) 1px, transparent 1.5px),
+    radial-gradient(circle, rgb(255 255 255 / 55%) 1.5px, transparent 2px);
+  background-position: 23px 41px, 97px 132px, 181px 76px;
+  background-size: 173px 191px, 251px 227px, 397px 311px;
+  opacity: 0.52;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 72%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 72%, transparent 100%);
+}
+
+.journey-horizon-scene {
+  top: min(24%, 130rem);
+  height: clamp(65rem, 22%, 100rem);
+  opacity: 0.25;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 19%, #000 72%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 19%, #000 72%, transparent);
+}
+
+.journey-aurora-scene {
+  top: min(34%, 190rem);
+  height: clamp(35rem, 13%, 85rem);
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 13%, #000 82%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 13%, #000 82%, transparent);
+}
+
+.journey-aurora-ribbon {
+  position: absolute;
+  left: -12%;
+  display: block;
+  width: 124%;
+  height: 36%;
+  border-radius: 50%;
+  filter: blur(18px);
+  transform-origin: 50% 50%;
+  animation: journeyAurora 19s ease-in-out infinite alternate;
+}
+
+.journey-aurora-ribbon--green {
+  top: 9%;
+  background: linear-gradient(to bottom, transparent 9%, rgb(92 212 171 / 36%) 42%, rgb(119 230 196 / 13%) 69%, transparent 100%);
+}
+
+.journey-aurora-ribbon--blue {
+  top: 34%;
+  background: linear-gradient(to bottom, transparent 7%, rgb(104 187 225 / 23%) 43%, rgb(116 227 202 / 13%) 70%, transparent 100%);
+  animation-duration: 24s;
+  animation-delay: -9s;
+}
+
+.journey-aurora-ribbon--violet {
+  top: 59%;
+  background: linear-gradient(to bottom, transparent 10%, rgb(167 157 221 / 14%) 44%, rgb(92 203 194 / 13%) 69%, transparent 100%);
+  animation-duration: 22s;
+  animation-delay: -5s;
+}
+
+@keyframes journeyAurora {
+  0% { transform: translate3d(-2%, 2%, 0) rotate(-7deg) skewY(-2deg); }
+  50% { transform: translate3d(2%, -3%, 0) rotate(-3deg) skewY(2deg); }
+  100% { transform: translate3d(-1%, 1%, 0) rotate(-6deg) skewY(-1deg); }
 }
 
 .journey-backdrop--space-only {
@@ -280,6 +354,8 @@ html[data-theme="light"] body {
 }
 
 .journey-atmosphere-scene {
+  top: min(48%, 300rem);
+  height: clamp(40rem, 16%, 125rem);
   background:
     radial-gradient(ellipse 77% 16% at 52% 17%, rgb(89 205 163 / 22%), transparent 77%),
     radial-gradient(ellipse 87% 19% at 48% 29%, rgb(75 181 207 / 17%), transparent 78%),
@@ -299,10 +375,15 @@ html[data-theme="light"] body {
   filter: blur(18px);
 }
 
-.journey-earth-scene img {
+.journey-earth-scene {
+  top: min(63%, 440rem);
+  background: linear-gradient(to bottom, transparent, rgb(210 235 230 / 15%) 18%, rgb(209 231 215 / 18%) 100%);
+}
+
+.journey-earth-composite {
   opacity: 0.34;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 9%, #000 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 9%, #000 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 11%, #000 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 11%, #000 100%);
 }
 
 .journey-astronaut { opacity: 0.65; }
@@ -311,13 +392,31 @@ html[data-theme="light"] body {
 .journey-cubesat { opacity: 0.72; }
 .journey-nanosat { opacity: 0.62; }
 .journey-gold-satellite { opacity: 0.62; }
+.journey-field-satellite {
+  position: absolute;
+  width: clamp(5rem, 8vw, 8.5rem);
+  height: auto;
+  opacity: 0.58;
+}
+.journey-field-cubesat { width: clamp(2.25rem, 3vw, 3rem); }
+.journey-field-left { left: 1%; top: 20%; }
+.journey-field-right { right: 1%; top: 74%; }
+.journey-satellite-row:nth-child(5n + 2) .journey-field-left { left: 3%; top: 63%; }
+.journey-satellite-row:nth-child(5n + 2) .journey-field-right { right: 2%; top: 28%; }
+.journey-satellite-row:nth-child(5n + 3) .journey-field-left { left: 2%; top: 34%; }
+.journey-satellite-row:nth-child(5n + 3) .journey-field-right { right: 4%; top: 67%; }
+.journey-satellite-row:nth-child(5n + 4) .journey-field-left { left: 4%; top: 70%; }
+.journey-satellite-row:nth-child(5n + 4) .journey-field-right { right: 1%; top: 18%; }
+.journey-satellite-row:nth-child(5n + 5) .journey-field-left { left: 1%; top: 18%; }
+.journey-satellite-row:nth-child(5n + 5) .journey-field-right { right: 3%; top: 55%; }
 .journey-meteor { opacity: 0.47; filter: saturate(0.82); }
 .journey-backdrop--night .journey-astronaut,
 .journey-backdrop--night .journey-turksat,
 .journey-backdrop--night .journey-gokturk,
 .journey-backdrop--night .journey-cubesat,
 .journey-backdrop--night .journey-nanosat,
-.journey-backdrop--night .journey-gold-satellite { opacity: 0.24; }
+.journey-backdrop--night .journey-gold-satellite { opacity: 0.42; }
+.journey-backdrop--night .journey-field-satellite { opacity: 0.4; }
 
 @keyframes journeyFloat {
   0%, 100% { transform: translate3d(0, 0, 0) rotate(-3deg); }
@@ -348,23 +447,25 @@ html[data-theme="light"] body {
 @media (max-width: 639px) {
   .journey-astronaut { left: 0; top: 22rem; width: 4.5rem; }
   .journey-turksat { right: 0; top: 33rem; width: 8rem; }
-  .journey-gokturk { right: 3%; top: 43rem; width: 5.5rem; }
-  .journey-cubesat { left: 5%; top: 47rem; width: 2rem; }
-  .journey-nanosat { right: 22%; top: 49rem; width: 6rem; }
-  .journey-gold-satellite { left: 5%; top: 52rem; width: 5.5rem; }
+  .journey-gokturk { left: auto; right: 1%; top: 53rem; width: 5.5rem; }
+  .journey-cubesat { left: 5%; top: 18rem; width: 2rem; }
+  .journey-nanosat { right: 3%; top: 49rem; width: 6rem; }
+  .journey-gold-satellite { left: 5%; top: 38rem; width: 5.5rem; }
+  .journey-field-satellite { width: 5.5rem; opacity: 0.45; }
+  .journey-field-cubesat { width: 2.25rem; }
   .journey-space-active footer,
   .journey-night-active footer { margin-top: 14rem; }
   .journey-space-scene .journey-scenery { opacity: 0.13; }
-  .journey-earth-scene img {
-    top: auto;
-    bottom: 16rem;
-    height: 88rem;
+  .journey-ground-observatory,
+  .journey-ground-launch {
+    height: clamp(34rem, 78vh, 55rem);
     object-fit: cover;
-    object-position: 64% center;
-    opacity: 0.22;
-    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 88%, transparent 100%);
-    mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 88%, transparent 100%);
+    opacity: 0.26;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 17%, #000 76%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent, #000 17%, #000 76%, transparent 100%);
   }
+  .journey-ground-observatory { object-position: 12% center; }
+  .journey-ground-launch { bottom: 7rem; object-position: 88% center; }
   .journey-final-scene { height: 30rem; }
   .journey-meteor { opacity: 0.3; }
   .journey-backdrop--night .journey-astronaut,
@@ -372,11 +473,12 @@ html[data-theme="light"] body {
   .journey-backdrop--night .journey-gokturk,
   .journey-backdrop--night .journey-cubesat,
   .journey-backdrop--night .journey-nanosat,
-  .journey-backdrop--night .journey-gold-satellite { opacity: 0.16; }
+  .journey-backdrop--night .journey-gold-satellite { opacity: 0.32; }
+  .journey-backdrop--night .journey-field-satellite { opacity: 0.3; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .journey-float, .journey-meteor { animation: none; will-change: auto; }
+  .journey-float, .journey-meteor, .journey-aurora-ribbon { animation: none; will-change: auto; }
   .journey-progress-thumb { transition: none; }
 }
 
