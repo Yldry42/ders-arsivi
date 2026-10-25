@@ -445,6 +445,12 @@ html[data-theme="light"] body {
 }
 
 @media (max-width: 639px) {
+  html { scrollbar-gutter: auto; }
+  .journey-deep-stars { height: 38%; }
+  .journey-horizon-scene { top: 24%; height: min(20%, 95rem); }
+  .journey-aurora-scene { top: 34%; height: 12%; }
+  .journey-atmosphere-scene { top: 48%; height: 15%; }
+  .journey-earth-scene { top: 63%; }
   .journey-astronaut { left: 0; top: 22rem; width: 4.5rem; }
   .journey-turksat { right: 0; top: 33rem; width: 8rem; }
   .journey-gokturk { left: auto; right: 1%; top: 53rem; width: 5.5rem; }
@@ -466,7 +472,7 @@ html[data-theme="light"] body {
   }
   .journey-ground-observatory { object-position: 12% center; }
   .journey-ground-launch { bottom: 7rem; object-position: 88% center; }
-  .journey-final-scene { height: 30rem; }
+  .journey-final-scene { height: 22rem; }
   .journey-meteor { opacity: 0.3; }
   .journey-backdrop--night .journey-astronaut,
   .journey-backdrop--night .journey-turksat,

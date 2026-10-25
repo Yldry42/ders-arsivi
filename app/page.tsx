@@ -175,7 +175,7 @@ const FloatingCloseButton = ({ label, onClick }: { label: string; onClick: () =>
     onClick={onClick}
     aria-label={label}
     title={label}
-    className="fixed right-5 top-5 z-[90] flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-900 text-2xl font-light leading-none text-white shadow-lg ring-1 ring-white/20 transition hover:-translate-y-0.5 hover:bg-slate-700 hover:shadow-xl dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+    className="fixed right-5 top-5 z-[90] flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-900 text-2xl font-light leading-none text-white shadow-lg ring-1 ring-white/20 transition hover:-translate-y-0.5 hover:bg-slate-700 hover:shadow-xl dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700"
   >
     ×
   </button>
@@ -192,6 +192,18 @@ const lightenHex = (hex: string, mix = 0.85) => {
   const gg = mixWhite(g).toString(16).padStart(2, '0');
   const bb = mixWhite(b).toString(16).padStart(2, '0');
   return `#${rr}${gg}${bb}`;
+};
+
+const tintDarkHex = (hex: string, mix = 0.16) => {
+  const normalized = hex.replace('#', '');
+  if (normalized.length !== 6) return '#111827';
+  const base = [17, 24, 39];
+  const channels = [0, 2, 4].map((offset, index) =>
+    Math.round(base[index] * (1 - mix) + parseInt(normalized.slice(offset, offset + 2), 16) * mix)
+      .toString(16)
+      .padStart(2, '0')
+  );
+  return `#${channels.join('')}`;
 };
 
 const translate = {
@@ -824,8 +836,9 @@ export default function Home() {
 
   useEffect(() => {
     if (selectedDersId !== null && modalRect) {
-      const targetWidth = Math.min(window.innerWidth * 0.9, 760);
-      const targetHeight = Math.min(window.innerHeight * 0.85, 700);
+      const isMobile = window.innerWidth < 640;
+      const targetWidth = isMobile ? window.innerWidth - 16 : Math.min(window.innerWidth * 0.9, 760);
+      const targetHeight = isMobile ? window.innerHeight - 16 : Math.min(window.innerHeight * 0.85, 700);
       const targetTop = (window.innerHeight - targetHeight) / 2;
       const targetLeft = (window.innerWidth - targetWidth) / 2;
 
@@ -1147,7 +1160,7 @@ export default function Home() {
       <article
         key={ders.id}
         onClick={(event) => openModal(event, ders.id)}
-        className="course-card flex h-48 w-full min-w-0 transform-gpu flex-col overflow-hidden rounded-3xl border p-5 shadow-sm transition [contain-intrinsic-size:20rem] [content-visibility:auto] hover:-translate-y-1 hover:shadow-lg cursor-pointer dark:border-slate-700"
+        className="course-card flex min-h-48 w-full min-w-0 transform-gpu flex-col overflow-hidden rounded-3xl border p-4 shadow-sm transition [contain-intrinsic-size:20rem] [content-visibility:auto] hover:-translate-y-1 hover:shadow-lg cursor-pointer dark:border-slate-700 sm:h-48 sm:p-5"
         style={{ borderColor: accentColor, backgroundColor: getCardBackground(accentColor) }}
       >
         <div className="flex items-start justify-between gap-3">
@@ -1356,6 +1369,7 @@ export default function Home() {
           const isCompactGradeSet = labels.length <= 11;
           const gradeGridStyle: CSSProperties = {
             gridTemplateColumns: `repeat(${labels.length}, minmax(0, 1fr))`,
+            minWidth: `${labels.length * 2.75}rem`,
           };
           const title = entry.baslik ?? [entry.ders_kodu, entry.ders_adi].filter(Boolean).join(' · ');
           const displayTitle = formatGradeDistributionTitle(entry);
@@ -1371,11 +1385,7 @@ export default function Home() {
           return (
             <article
               key={`${animationKey}-${displayTitle || 'distribution'}-${meta}-${index}`}
-              className={`animate-grade-chart rounded-3xl border p-4 shadow-sm ${
-                variant === 'plain'
-                  ? 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950'
-                  : 'border-white/30 bg-white/15'
-              }`}
+              className="animate-grade-chart min-w-0"
             >
               <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
                 {displayTitle || meta ? (
@@ -1402,7 +1412,8 @@ export default function Home() {
                   {totalCount} {language === 'tr' ? 'öğrenci' : 'students'}
                 </span>
               </div>
-              <div className={`mt-5 grid ${isCompactGradeSet ? 'gap-3' : 'gap-2'}`} style={gradeGridStyle}>
+              <div className="-mx-1 mt-5 overflow-x-auto px-1 pb-2">
+              <div className={`grid ${isCompactGradeSet ? 'gap-3' : 'gap-2'}`} style={gradeGridStyle}>
                 {labels.map((label, labelIndex) => {
                   const count = Number(entry.dagilim[label] ?? 0);
                   const percentage = (count / maxCount) * 100;
@@ -1412,12 +1423,11 @@ export default function Home() {
                   return (
                     <div key={`${animationKey}-${displayTitle}-${meta}-${label}`} className="flex min-w-0 flex-col items-center gap-1.5 text-[11px]">
                       <div
-                        className={`flex w-full items-end overflow-hidden rounded-2xl p-1 ${isCompactGradeSet ? 'h-24 max-w-16' : 'h-20 max-w-11'}`}
-                        style={{ backgroundColor: `${chartColor}22` }}
+                        className={`flex w-full items-end overflow-hidden ${isCompactGradeSet ? 'h-24 max-w-16' : 'h-20 max-w-11'}`}
                         title={`${label}: ${count} (${totalPercentage.toFixed(1)}%)`}
                       >
                         <div
-                          className={`animate-grade-bar w-full rounded-xl shadow-sm transition-all duration-300 ${count === 0 ? 'opacity-0 shadow-none' : ''}`}
+                          className={`animate-grade-bar w-full rounded-t-lg transition-all duration-300 ${count === 0 ? 'opacity-0' : ''}`}
                           style={{
                             height: `${height}%`,
                             backgroundColor: `${chartColor}cc`,
@@ -1431,6 +1441,7 @@ export default function Home() {
                     </div>
                   );
                 })}
+              </div>
               </div>
             </article>
           );
@@ -1447,7 +1458,7 @@ export default function Home() {
   };
 
   const renderArchiveExplorer = (ders: Ders, archiveItems: ArsivDosyasi[], accentColor: string) => {
-    const textColor = getContrastTextColor(lightenHex(accentColor, 0.7));
+    const textColor = theme === 'dark' ? '#e2e8f0' : getContrastTextColor(lightenHex(accentColor, 0.7));
     const courseOfferings = getCourseOfferings(ders);
     const courseInstructorOptions = Array.from(
       new Set(courseOfferings.flatMap((offering) => normalizeInstructors(offering.ogretim_uyesi)).filter((name) => name && name !== '-'))
@@ -1892,14 +1903,14 @@ export default function Home() {
   }, [showJourney]);
 
   return (
-    <main className={`${showJourney ? 'journey-active' : ''} ${showSpaceOnly ? 'journey-space-active' : ''} ${showNightSpace ? 'journey-night-active' : ''} relative isolate min-h-screen w-full max-w-7xl mx-auto px-4 py-5 sm:px-6 sm:py-10 bg-[var(--background)] text-[var(--foreground)] transition-colors duration-300`}>
+    <main className={`${showJourney ? 'journey-active' : ''} ${showSpaceOnly ? 'journey-space-active' : ''} ${showNightSpace ? 'journey-night-active' : ''} relative isolate min-h-screen w-full max-w-7xl mx-auto px-3 py-3 sm:px-6 sm:py-10 bg-[var(--background)] text-[var(--foreground)] transition-colors duration-300`}>
       {showJourney ? <JourneyBackdrop /> : null}
       {showSpaceOnly ? <SpaceOnlyBackdrop /> : null}
       {showNightSpace ? <NightSpaceBackdrop /> : null}
       {showJourney ? <JourneyProgress /> : null}
-      <div className="sticky top-0 z-30 -mx-4 mb-5 bg-transparent px-4 pb-3 pt-2 sm:-mx-6 sm:mb-6 sm:px-6 sm:pb-4">
+      <div className="sticky top-0 z-30 -mx-3 mb-5 bg-transparent px-3 pb-3 pt-2 sm:-mx-6 sm:mb-6 sm:px-6 sm:pb-4">
         <div className="site-header mx-auto h-[9.5rem] max-w-7xl overflow-visible rounded-[2.5rem] border border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-950/90 sm:h-[7.25rem] sm:rounded-full">
-          <div className="flex h-full flex-col justify-center gap-2 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-5">
+          <div className="flex h-full flex-col justify-center gap-2 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-5">
             <div className="flex w-full min-w-0 items-center gap-3 sm:w-auto sm:flex-1 sm:gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center sm:h-16 sm:w-16">
                 {!logoFailed ? (
@@ -2121,7 +2132,7 @@ export default function Home() {
           </section>
 
           <aside className="lg:sticky lg:top-[13.5rem]">
-            <div className="max-h-[calc(100vh-15rem)] overflow-y-auto rounded-3xl border border-[color:var(--border)] bg-[var(--surface)] p-5 shadow-sm">
+            <div className="rounded-3xl border border-[color:var(--border)] bg-[var(--surface)] p-4 shadow-sm sm:p-5 lg:max-h-[calc(100vh-15rem)] lg:overflow-y-auto">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <h2 className="text-xl font-semibold text-slate-900 dark:text-white">{locale.instructorPanelTitle}</h2>
@@ -2210,7 +2221,7 @@ export default function Home() {
 
       {showJourney ? <JourneyFinalScene /> : null}
 
-      <footer className={`${showJourney ? 'mt-0' : 'mt-14'} relative z-10 rounded-3xl border border-slate-200/80 bg-white/80 p-6 shadow-sm backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-950/80 sm:p-8`}>
+      <footer className={`${showJourney ? 'mt-0' : 'mt-14'} relative z-10 min-w-0 rounded-3xl border border-slate-200/80 bg-white/80 p-4 shadow-sm backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-950/80 sm:p-8`}>
         <div className="grid gap-6 md:grid-cols-2 md:items-start">
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
@@ -2219,7 +2230,7 @@ export default function Home() {
             <div className="mt-4 text-sm text-slate-700 dark:text-slate-200">
               <div className="space-y-2">
                 {contactEmails.map((email) => (
-                  <div key={email} className="flex w-fit items-center gap-3">
+                  <div key={email} className="flex min-w-0 items-center gap-1 sm:gap-3">
                     <a
                       href={getGmailComposeUrl(email)}
                       target="_blank"
@@ -2890,7 +2901,8 @@ export default function Home() {
             const ders = dersList.find((item) => item.id === selectedDersId);
             if (!ders) return null;
             const accentColor = ders.renk_kodu ?? '#64748b';
-            const contrastText = getContrastTextColor(accentColor);
+            const modalTextColor = theme === 'dark' ? '#e2e8f0' : getContrastTextColor(lightenHex(accentColor, 0.7));
+            const modalBackgroundColor = theme === 'dark' ? tintDarkHex(accentColor) : `${lightenHex(accentColor, 0.7)}e8`;
             const archiveItems = courseArchiveMap[ders.id] ?? [];
             const courseOfferings = getCourseOfferings(ders);
             const courseOfferingsWithInstructors = courseOfferings
@@ -2904,16 +2916,16 @@ export default function Home() {
 
             return (
               <div
-                className="absolute transform-gpu overflow-hidden rounded-3xl bg-white shadow-xl [contain:layout_paint] dark:bg-slate-900"
+                className="absolute transform-gpu overflow-hidden rounded-3xl shadow-xl [contain:layout_paint]"
                 onClick={(event) => event.stopPropagation()}
                 onTransitionEnd={onModalTransitionEnd}
                 style={{
                   ...modalStyle,
-                  border: `2px solid ${accentColor}`,
-                  backgroundColor: `${lightenHex(accentColor, 0.7)}e8`,
-                  '--course-modal-scrollbar-track': `${lightenHex(accentColor, 0.7)}e8`,
+                  border: `2px solid ${theme === 'dark' ? `${accentColor}99` : accentColor}`,
+                  backgroundColor: modalBackgroundColor,
+                  '--course-modal-scrollbar-track': theme === 'dark' ? '#192334' : `${lightenHex(accentColor, 0.7)}e8`,
                   '--course-modal-scrollbar-thumb': accentColor,
-                  color: getContrastTextColor(lightenHex(accentColor, 0.7)),
+                  color: modalTextColor,
                   position: 'absolute',
                   transitionProperty: 'top, left, width, height, opacity, transform',
                   transitionDuration: '220ms',
@@ -2924,30 +2936,30 @@ export default function Home() {
                 <div
                   className="course-modal-scrollbar h-full overflow-y-auto"
                   style={{
-                    '--course-modal-scrollbar-track': `${lightenHex(accentColor, 0.76)}f2`,
+                    '--course-modal-scrollbar-track': theme === 'dark' ? '#192334' : `${lightenHex(accentColor, 0.76)}f2`,
                     '--course-modal-scrollbar-thumb': `${accentColor}cc`,
                   } as CSSProperties}
                 >
-                <div className="relative p-6">
+                <div className="relative p-4 sm:p-6">
                   <FloatingCloseButton label={locale.close} onClick={() => closeModal()} />
                   <div className="pr-14">
-                    <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+                    <h2 className="text-xl font-semibold text-slate-900 dark:text-white sm:text-2xl">
                       {ders.kod} {getDisplayNo(ders)} — {language === 'en' && ders.ders_adi_en ? ders.ders_adi_en : ders.ders_adi}
                     </h2>
                   </div>
                 </div>
 
                 <div
-                  className="space-y-6 border-t px-6 py-6"
+                  className="space-y-6 border-t px-4 py-5 sm:px-6 sm:py-6"
                   style={{
-                    color: getContrastTextColor(lightenHex(accentColor, 0.7)),
+                    color: modalTextColor,
                     borderColor: accentColor,
                   }}
                 >
                   <div className="space-y-2">
-                    <h3 className="text-sm font-semibold uppercase tracking-[0.15em]" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>{locale.notesTitle}</h3>
+                    <h3 className="text-sm font-semibold uppercase tracking-[0.15em]" style={{ color: modalTextColor }}>{locale.notesTitle}</h3>
                     {courseNoteOwners.length ? (
-                      <div className="flex flex-wrap gap-2 text-sm" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>
+                      <div className="flex flex-wrap gap-2 text-sm" style={{ color: modalTextColor }}>
                         {courseNoteOwners.map((owner) => (
                           <button
                             key={owner}
@@ -2963,20 +2975,20 @@ export default function Home() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>
+                      <p className="text-sm" style={{ color: modalTextColor }}>
                         {locale.noNotesInfo}
                       </p>
                     )}
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-sm font-semibold uppercase tracking-[0.15em]" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>{locale.aboutCourseTitle}</h3>
-                    <p className="mt-2 text-sm leading-7" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>
+                    <h3 className="text-sm font-semibold uppercase tracking-[0.15em]" style={{ color: modalTextColor }}>{locale.aboutCourseTitle}</h3>
+                    <p className="mt-2 text-sm leading-7" style={{ color: modalTextColor }}>
                       {ders.degerlendirme ?? ders.cikmis_soru ?? locale.noCourseNoteInfo}
                     </p>
                   </div>
                   {courseGradeDistributions.length ? (
                     <div className="space-y-3 border-t pt-6" style={{ borderColor: `${accentColor}80` }}>
-                      <h3 className="text-sm font-semibold uppercase tracking-[0.15em]" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>{locale.gradeDistributionTitle}</h3>
+                      <h3 className="text-sm font-semibold uppercase tracking-[0.15em]" style={{ color: modalTextColor }}>{locale.gradeDistributionTitle}</h3>
                       {(() => {
                         const instructorOptions = Array.from(new Set(courseGradeDistributions.map((entry) => entry.akademisyen).filter(Boolean))) as string[];
                         const activeInstructor =
@@ -3006,7 +3018,7 @@ export default function Home() {
                           <div className="space-y-4">
                             <div className="grid gap-3 sm:grid-cols-2">
                               <label className="block">
-                                <span className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>
+                                <span className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: modalTextColor }}>
                                   {locale.instructorSingular}
                                 </span>
                                 <select
@@ -3019,7 +3031,7 @@ export default function Home() {
                                   className="mt-2 w-full rounded-2xl border bg-white/55 px-4 py-3 text-sm font-semibold shadow-sm outline-none transition focus:ring-2 dark:bg-slate-950/40"
                                   style={{
                                     borderColor: `${accentColor}80`,
-                                    color: getContrastTextColor(lightenHex(accentColor, 0.7)),
+                                    color: modalTextColor,
                                   }}
                                 >
                                   {instructorOptions.map((instructor) => (
@@ -3030,7 +3042,7 @@ export default function Home() {
                                 </select>
                               </label>
                               <label className="block">
-                                <span className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>
+                                <span className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: modalTextColor }}>
                                   {locale.termLabel}
                                 </span>
                                 <select
@@ -3042,7 +3054,7 @@ export default function Home() {
                                   className="mt-2 w-full rounded-2xl border bg-white/55 px-4 py-3 text-sm font-semibold shadow-sm outline-none transition focus:ring-2 dark:bg-slate-950/40"
                                   style={{
                                     borderColor: `${accentColor}80`,
-                                    color: getContrastTextColor(lightenHex(accentColor, 0.7)),
+                                    color: modalTextColor,
                                   }}
                                 >
                                   {periodOptions.map((period) => (
@@ -3068,18 +3080,18 @@ export default function Home() {
 
                 {courseOfferingsWithInstructors.length ? (
                   <div
-                    className="border-t px-6 py-5"
+                    className="border-t px-4 py-5 sm:px-6"
                     style={{
-                      color: getContrastTextColor(lightenHex(accentColor, 0.7)),
+                      color: modalTextColor,
                       borderColor: accentColor,
                     }}
                   >
                     <div className="space-y-2">
-                      <p className="text-xs uppercase tracking-[0.2em]" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>{locale.instructorPlural}</p>
+                      <p className="text-xs uppercase tracking-[0.2em]" style={{ color: modalTextColor }}>{locale.instructorPlural}</p>
                       <div className="space-y-3">
                         {courseOfferingsWithInstructors.map((offering) => (
                           <div key={`${offering.id}-${offering.yil}-${offering.donem}`} className="rounded-2xl border border-white/30 bg-white/15 px-4 py-3">
-                            <p className="text-xs font-semibold uppercase tracking-[0.12em] opacity-75" style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}>
+                            <p className="text-xs font-semibold uppercase tracking-[0.12em] opacity-75" style={{ color: modalTextColor }}>
                               {offering.yil} · {offering.donem}
                             </p>
                             <div className="mt-2 space-y-1">
@@ -3092,7 +3104,7 @@ export default function Home() {
                                     setIsAcademicModalClosing(false);
                                   }}
                                   className="block text-left font-medium underline decoration-current/35 underline-offset-4 transition hover:opacity-70"
-                                  style={{ color: getContrastTextColor(lightenHex(accentColor, 0.7)) }}
+                                  style={{ color: modalTextColor }}
                                 >
                                   {instructor}
                                 </button>
